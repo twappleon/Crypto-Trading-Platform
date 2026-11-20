@@ -45,3 +45,13 @@ Run `node web/site-smoke.test.cjs` and `node web/site-interaction.test.cjs`.
 
 ### Live Chromium desktop/mobile BDD gate
 Run `npm install --no-save --no-package-lock playwright@1.64.1`, `npx playwright install --with-deps chromium`, then `node web/site-browser.test.cjs`. CI `Paper Site Smoke` must execute this in 1366×768 desktop and 390×844 mobile Chromium, producing screenshot artifacts. It must verify HTTP 200 from locally served static page, PAPER/SANDBOX and synthetic data labels, correct BUY reserves, overdraft rejection, stale detached Cancel handler after Reset, SELL reserves, Cancel All of both assets, repeat action idempotency, no cross-origin requests, reload resets and no horizontal overflow. Optional `SITE_URL` points the same script to a REAL public URL. Local HTTP screenshots DO NOT count as published production HTTP/browser E2E; a READY Vercel Production URL must be tested separately.
+
+## Round 011 — exact paper hold precision and release provenance
+Run `node web/site-smoke.test.cjs`, `node web/site-interaction.test.cjs` and `node web/site-browser.test.cjs`; on the publicly deployed exact source run `node web/site-public-verify.cjs` and `SITE_URL=https://crypto-trading-platform-demo.vercel.app/ node web/site-browser.test.cjs`.
+- Given BUY price 64275.01 and quantity 0.000001, the exact cost 0.06427501 synthetic USDC reserves **0.07** (ceil), available decreases by 0.07, Cancel restores the exact amount.
+- Given BUY price 0.01 and quantity 0.000001, a sub-cent notional still reserves **0.01** in the educational simulator, never a displayed 0.00 lock.
+- Given a BUY that locks the entire 100000.00 USDC starting wallet, placing even a tiny additional order is rejected; open order count does not change.
+- Exponential input `1e-6`, excess decimal places, invalid price/amount, and overlarge values are rejected with no new order.
+- Given an accepted SELL, BTC reserve uses exact integer 0.000001 units. A repeated cancel or cancel-all cannot double-release synthetic collateral.
+- In real Chromium on both 1366px desktop and 390px mobile, verify v0.4 marker, 0.07 hold, 99999.93 available and complete release, plus existing reset, stale-button, and network-isolation checks.
+- **Release acceptance:** production target READY, git ref=main, githubCommitSha matches release source SHA, public HTTP 200, same-HTML hash, public Chromium BDD and Site/Core GitHub CI SUCCESS. If any fail, keep Round 011 pending.
