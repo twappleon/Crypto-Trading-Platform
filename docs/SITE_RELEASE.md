@@ -9,7 +9,7 @@
 - Safety: prices/order-book levels fabricated; order statuses only OPEN / CANCELED, no FILLED/settlement, no accounts/real balances, KYC data, custody, deposit, withdrawals, network requests or localStorage.
 - Latest meaningful UI source commit: [7108cbb](https://github.com/twappleon/Crypto-Trading-Platform/commit/7108cbb0a875c71e151a620ab16b264ea051e678). [Site source](../web/index.html).
 - BDD source: [interaction test](../web/site-interaction.test.cjs) and [static smoke](../web/site-smoke.test.cjs); [Actions](https://github.com/twappleon/Crypto-Trading-Platform/actions/workflows/site.yml).
-- Test evidence this run: isolated JS browser-DOM harness 9/9 behavioral assertions PASS (initial funds, quote hold, overdraw, cancel idempotency, status, base hold, invalid precision, reset) and 10/10 static safety markers PASS. **GitHub Actions SUCCESS on the latest commit is not independently confirmed.**
+- Test evidence this run: exact checked-in `web/site-interaction.test.cjs` was executed using an isolated V8 Node-API shim (39 behavioral assertion checks PASS), plus seven additional static guards (46 combined PASS). An independent 9-assertion UI check and ten-marker static scan also passed; this is not a substitute for the GitHub Actions Node job or published HTTPS browser E2E. **GitHub Actions SUCCESS on the latest commit is not independently confirmed.**
 - Do not count the site work among 100 Accepted rounds until BOTH GitHub CI on exact source/deployment SHA is green and public HTTPS/desktop/mobile browser E2E is witnessed.
 
 ## Required next verification when Vercel quota clears
