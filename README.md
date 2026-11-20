@@ -39,3 +39,7 @@ A round is **Accepted** only when code changes are real, BDD and CI both succeed
 
 ## Round 006 — explicit PAPER trade settlement (atomic)
 \`PaperSettlementService.settle(tradeId, makerId, takerId, quantity)\` performs a *single PostgreSQL transaction* spanning both per-asset balanced journals, buyer/seller balances, per-order collateral reduction/release, remaining quantities, and an append-only trade receipt. Maker-price execution, partial/final fills, buy-limit spread release, duplicate trade-id replay, self-trade rejection and cancel-after-partial-fill are covered by PostgreSQL tests. V5 expands order lifecycle to OPEN/PARTIAL/FILLED/CANCELED. **This is an internal explicit-pair primitive, not a matching engine sequencer**: the caller chooses maker/taker; FIFO, crossing arbitration under concurrent new orders, fee calculation, snapshot/replay and production controls are not yet implemented. Do not expose this prototype to real orders or funds.
+
+
+## Round 007 — PAPER fee conservation (prototype)
+An immutable maker/taker basis-point schedule now deducts buyer fee from received BASE and seller fee from received QUOTE, accumulating synthetic fees in `paper_fee_vault`. All fee postings join existing two-asset balanced journals, order collateral updates and immutable trade receipts in one PostgreSQL transaction (V6). No live fee billing, custody, real trading or safe external API is enabled. Fee calculation uses deterministic 18-decimal floor and rejects unrepresentable trade costs. Run `bash run-tests.sh` and PostgreSQL/JUnit CI to verify.
