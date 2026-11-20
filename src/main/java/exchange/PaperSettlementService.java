@@ -280,6 +280,14 @@ public final class PaperSettlementService {
                     p.setBigDecimal(12,fees.buyerFeeBase());p.setBigDecimal(13,fees.sellerFeeQuote());
                     p.executeUpdate();
                 }
+                // The trade, both journals, balances, holds AND delivery intent
+                // must commit/rollback together. Never enqueue after COMMIT.
+                try(PreparedStatement p=c.prepareStatement(
+                        "INSERT INTO paper_trade_outbox(trade_id) VALUES (?)")){
+                    p.setString(1,tradeId);
+                    if(p.executeUpdate()!=1)
+                        throw new IllegalStateException("paper outbox insertion failed");
+                }
                 c.commit();return true;
             }catch(SQLException|RuntimeException e){
                 try{c.rollback();}catch(SQLException rb){e.addSuppressed(rb);}
