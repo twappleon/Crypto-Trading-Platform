@@ -34,7 +34,8 @@ public final class PaperOrderService {
                               ExchangeCore.Side side, BigDecimal price, BigDecimal quantity) {
         requireId(id);
         PostgresLedger.requireAccount(owner);
-        if ("treasury".equals(owner)) throw new IllegalArgumentException("treasury cannot trade");
+        if ("treasury".equals(owner) || PaperFeePolicy.FEE_ACCOUNT.equals(owner))
+            throw new IllegalArgumentException("internal system account cannot trade");
         PostgresLedger.requireAsset(base);
         PostgresLedger.requireAsset(quote);
         if (base.equals(quote) || side == null) throw new IllegalArgumentException("invalid market or side");
