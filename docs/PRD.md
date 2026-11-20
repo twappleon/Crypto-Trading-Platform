@@ -30,3 +30,14 @@ Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPE
 - Database triggers defend ordinary writes but are not tamper-proof against database owners/superusers. No least-privilege DB roles, production migration governance, scheduled reconciliation/alerting, ledger rebuild/snapshot or end-to-end settlement coupling.
 - Round 002 is a paper-only proof, not evidence of production security.
 - Launch requires security review and legal/compliance sign-off.
+
+
+## Round 004 — durable available/locked PAPER funds
+- V3 adds `paper_ledger_holds` keyed by immutable operation ID: asset/account/amount and ACTIVE or RELEASED state. All financial amounts remain synthetic.
+- `PaperHoldService.reserve()` performs a PostgreSQL transaction with an account-row `FOR UPDATE` lock, checks total minus active holds, then persists the hold. Exact duplicate operation IDs are no-ops, reused IDs with changed intent are rejected. Released IDs never re-activate.
+- `PaperHoldService.release()` checks owner/asset and serializes on the same parent account row. Duplicate release is a no-op, not a second credit.
+- Every `PostgresLedger.post()` balance debit now checks `new_total >= sum(active holds)` while the parent account is locked. Ordinary journal transfers cannot spend locked funds.
+- Point-in-time balance API returns `total`, `locked` and `available` from a single repeatable-read snapshot. Read-only conservation audit flags negative available funds, in addition to historical ledger drift.
+- This is NOT order reservation / matching-engine settlement; future rounds must atomically consume holds for fills and fees. No release by unauthenticated public clients, no custody integration.
+- Invariant: account.balance == sum(journal deltas), active holds >= 0, and every non-treasury available = total - active holds >= 0.
+- Migration is disposable-schema DDL, not a production Flyway governance mechanism. DB privileged writers can bypass application rules; separate roles and append-only permissions remain open security gates.
