@@ -16,3 +16,16 @@ jobs:
         run: |
           node web/site-smoke.test.cjs
           node web/site-interaction.test.cjs
+      - name: Install Chromium for actual browser E2E
+        run: |
+          npm install --no-save --no-package-lock playwright@1.56.0
+          npx playwright install --with-deps chromium
+      - name: Test desktop and mobile Chromium, save evidence
+        run: node web/site-browser.test.cjs
+      - name: Upload browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-site-r010-desktop-mobile
+          path: artifacts/*.png
+          if-no-files-found: ignore
