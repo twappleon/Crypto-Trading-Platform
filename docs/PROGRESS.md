@@ -1,8 +1,8 @@
 # 100-round verified development ledger
 
 ## Current accounting (2026-11-21)
-**Submitted: 8** rounds. **Accepted: 6/100** (002, 003, 004, 005, 006, 007). **Pending/failed: 2** (original 001; 008 awaiting exact-SHA GitHub CI).
-Round 007 source SHA CI is green; verify final documentation SHA via Actions separately.
+**Submitted: 8** rounds. **Accepted: 7/100** (002, 003, 004, 005, 006, 007, 008). **Pending/failed: 1** (original 001).
+Round 008 code-and-test SHA has a green PostgreSQL/JUnit BDD run; see exact evidence in row 008 and Round 008 report.
 
 | Round | Actual source change | BDD & negative tests | GitHub CI | Source SHA | Accepted |
 |---|---|---|---|---|---|
@@ -15,7 +15,7 @@ Round 007 source SHA CI is green; verify final documentation SHA via Actions sep
 | 006 | V5 explicit-pair atomic PAPER fill: two balanced asset journals, maker-price execution, immutable trade receipts, partial/final order states and holds, partial cancellation | Standalone BDD PASS; PostgreSQL/JUnit **23/23 PASS** (5 new Round 006 tests), 0 failures/errors/skipped | [**SUCCESS — Run #93**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44774297393); initial Run #90 failed one wrong exception assertion, corrected | [7641e07](https://github.com/twappleon/Crypto-Trading-Platform/commit/7641e07b5955c5b0c1c80b291e6778764bf1cfdf) | **YES** |
 
 | 007 | Atomic PAPER maker/taker fee settlement: BigDecimal 18-decimal floor, fee-vault per-asset balanced journal, V6 immutable fee receipts and replay fee-rate conflict | Standalone Round 007 BDD PASS; PostgreSQL JUnit **28/28 PASS** including 5 fee tests; 0 failures/errors/skips | [**SUCCESS — Run #109**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44784435281) | [16d7fbf](https://github.com/twappleon/Crypto-Trading-Platform/commit/16d7fbf7710d3978662e6c9526bb12005efe9eeb) | **YES** |
-| 008 | V7 atomic trade outbox, leased claim/ack, stale-token fencing, consumer inbox dedup + 5 new PostgreSQL BDD scenarios | Standalone/CI PENDING | PENDING exact SHA | [source under review](https://github.com/twappleon/Crypto-Trading-Platform/pull/1) | **PENDING** |
+| 008 | V7 atomic paper-trade outbox, same-commit settlement, SKIP LOCKED 60s token leases, stale-token fencing + consumer inbox dedup | Standalone BDD PASS; **33/33 JUnit PASS** (5 new PostgreSQL tests), zero failed/errors/skips | [**SUCCESS — Run #126**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44793845793) | [f9c9c3d](https://github.com/twappleon/Crypto-Trading-Platform/commit/f9c9c3d9cabd023a2ec21130011f7e33f399faa7) | **YES** |
 
 [Round 002 report](ROUND_002_REPORT.md) · [Round 003 report](ROUND_003_REPORT.md) · [Round 004 report](ROUND_004_REPORT.md) · [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1)
 
@@ -28,7 +28,7 @@ A round counts only for meaningful source changes and executable BDD/negative te
 005: Accepted durable order reservation + cancel/release (18/18 JUnit, CI Run #85 SUCCESS).
 006: Accepted explicit-pair maker-price atomic PAPER settlement, partial/final fills, and hold release (23/23 JUnit, CI #93).
 007: Accepted atomic maker/taker fees, deterministic 18-decimal floor, dedicated synthetic fee vault and receipt audit (28 JUnit PASS, Run #109).
-008: Submitted transactional outbox, lease/ack fencing, consumer inbox idempotency; pending final CI.\n009: Replay and recovery hardening (including durable FIFO matching and outbox publisher restart).
+008: Accepted transactional outbox, lease/ack fencing, consumer inbox idempotency (33/33 JUnit, CI #126).\n009: Replay and recovery hardening (including durable FIFO matching and outbox publisher restart).
 009: Crash recovery/replay.
 010: High-contention property/invariant tests.
 011+: Auth/MFA, KYC sandbox, APIs/WebSockets, admin, frontend, E2E and hardening.
@@ -61,8 +61,8 @@ A round counts only for meaningful source changes and executable BDD/negative te
 - Blockers: no matching sequencer, no real API/frontend, no production DB role isolation/security audit; PAPER only.
 
 ## Round 008 submission (2026-11-21)
-**Submitted 8; Accepted remains 6/100 pending tests on exact new SHA.**
+**Submitted 8; Accepted 7/100** (code/test SHA [f9c9c3d](https://github.com/twappleon/Crypto-Trading-Platform/commit/f9c9c3d9cabd023a2ec21130011f7e33f399faa7), [GitHub Actions #126 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44793845793)).
 - Code: V7 durable `paper_trade_outbox` + `paper_trade_consumer_inbox`; `PaperOutboxService` with SKIP LOCKED lease, token-fenced ACK and consumer receipt dedup; outbox insertion wired to `PaperSettlementService` before its settlement COMMIT.
-- BDD: 5 additional PostgreSQL scenarios checking success/duplicate event, failed settlement FK rollback, crashed/stale leases, dedup across object restart and 8 competing claim workers. Test evidence and updated SHA required before acceptance.
+- BDD: 5 additional PostgreSQL scenarios checking success/duplicate event, failed settlement FK rollback, crashed/stale leases, dedup across object restart and 8 competing claim workers. CI confirms **33/33 JUnit PASS**, zero failures/errors/skips, Standalone BDD PASS; Round 008 is Accepted.
 - [Round 008 report](ROUND_008_REPORT.md) · [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1).
 - Next 009: Restart/replay resilience, outbox worker recovery and durable FIFO matching arbitration. No live funds.
