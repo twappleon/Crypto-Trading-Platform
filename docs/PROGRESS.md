@@ -1,7 +1,7 @@
 # 100-round verified development ledger
 
 ## Current accounting (2026-11-20)
-**Submitted: 4** rounds. **Accepted: 3/100** (002, 003, 004). **Pending/failed: 1** (original 001).
+**Submitted: 5** rounds. **Accepted: 4/100** (002, 003, 004, 005). **Pending/failed: 1** (original 001).
 
 | Round | Actual source change | BDD & negative tests | GitHub CI | Source SHA | Accepted |
 |---|---|---|---|---|---|
@@ -9,6 +9,7 @@
 | 002 | Durable PostgreSQL journal, atomic balances, SQL migration, idempotency, collision/overdraft/precision handling, baseline bugfix, JUnit CI | Standalone BDD PASS; PostgreSQL 2 integration + 2 core JUnit tests; **4 passed, 0 failed/errors/skipped** | [**SUCCESS** — run #25](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44737212887) | [14fbf63](https://github.com/twappleon/Crypto-Trading-Platform/commit/14fbf632c4d1591d61c06b6a8c9161789d0bd5e9) | **YES** |
 | 003 | V2 deferred conservation/append-only triggers, read-only reconciliation, SQLSTATE retry classification and rollback BDD | Standalone BDD PASS; **8 JUnit passed**, 0 failures/errors/skipped (4 new Round 003 integration) | [**SUCCESS — Run #34**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44745047231) | [b3d52c7](https://github.com/twappleon/Crypto-Trading-Platform/commit/b3d52c757b2c1c641e2e0e034151b18076d944d0) | **YES** |
 | 004 | PostgreSQL-backed durable paper holds, available/locked snapshots, debit protection and corrected migration / idempotency conflict | Independent BDD PASS; **13/13 JUnit PASS**, including 5 new PostgreSQL hold tests | [**SUCCESS — Run #64**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44754663669) | [87f8c64](https://github.com/twappleon/Crypto-Trading-Platform/commit/87f8c6487d1b85d189b2e6d4f77546819898819b) | **YES** |
+| 005 | PostgreSQL persisted per-order BUY/SELL paper reserves + immutable replay and cancel/release transaction | Independent BDD PASS; **18/18 JUnit**, 5 new integration tests, 0 failures/errors/skips | [**SUCCESS — Run #85**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44764831746) | [39d0812](https://github.com/twappleon/Crypto-Trading-Platform/commit/39d08126acc4f1317cb261c9191d4eb18a946085) | **YES** |
 
 [Round 002 report](ROUND_002_REPORT.md) · [Round 003 report](ROUND_003_REPORT.md) · [Round 004 report](ROUND_004_REPORT.md) · [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1)
 
@@ -18,7 +19,7 @@ A round counts only for meaningful source changes and executable BDD/negative te
 ## Next P0 rounds
 003: Accepted DB-side journal conservation, classified retries and rollback BDD (8 JUnit PASS; CI #34).
 004: Accepted available/locked balances and safe hold/release (13 JUnit PASS, Run #64 SUCCESS).
-005: Limit-order reservation idempotency.
+005: Accepted durable order reservation + cancel/release (18/18 JUnit, CI Run #85 SUCCESS).
 006: Maker-price atomic trade settlement and hold release.
 007: Decimal precision, fees and deterministic rounding.
 008: Transactional outbox.
@@ -30,9 +31,9 @@ A round counts only for meaningful source changes and executable BDD/negative te
 
 
 ## Round 005 submission (2026-11-20)
-**Submitted 5; Accepted remains 3/100 until exact-SHA GitHub Actions SUCCESS and re-verification.**
+**Submitted 5; Accepted 4/100. Exact source/documentation SHA 39d0812 has GitHub Actions Run #85 SUCCESS.**
 - Feature: `PaperOrderService` + V4 persisted orders, atomic per-order collateral lock/release and reserved `order:` namespace; invalid amount/identity/collision fail closed.
 - BDD: 5 PostgreSQL integration cases (BUY/SELL reserve + durable lookup, immutable replay/cancel, negative/overdraft, hold collision rollback, 12-way concurrent orders).
 - Code commit: [261da8d](https://github.com/twappleon/Crypto-Trading-Platform/commit/261da8d367dfa46dc89bb15202290d78af75d6e6).
-- **Verification:** pending GitHub Actions at time of submission. Do NOT count as Accepted before confirmed CI green on updated code/docs.
+- **Verification:** [GitHub Actions Run #85 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44764831746), standalone BDD PASS, 18/18 JUnit PASS; zero failures/errors/skips. Final ledger-only SHA requires a second CI run before completion is reported.
 - [Round 005 report](ROUND_005_REPORT.md). Next P0 Round 006: matching engine + transactionally coupled partial-fill settlement, maker-price quote refunds, and cancellation race arbitration.
