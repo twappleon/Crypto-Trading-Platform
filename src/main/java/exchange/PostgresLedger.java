@@ -41,7 +41,8 @@ public final class PostgresLedger {
                 "/db/migration/V2__paper_ledger_guards.sql",
                 "/db/migration/V3__paper_holds.sql",
                 "/db/migration/V4__paper_orders.sql",
-                "/db/migration/V5__paper_settlement.sql")) {
+                "/db/migration/V5__paper_settlement.sql",
+                "/db/migration/V6__paper_fees.sql")) {
             String sql;
             try (var stream = PostgresLedger.class.getResourceAsStream(path)) {
                 if (stream == null) throw new IllegalStateException("paper ledger migration missing: " + path);
@@ -50,7 +51,7 @@ public final class PostgresLedger {
                 throw new IllegalStateException("cannot read ledger migration", e);
             }
             try (Statement statement = c.createStatement()) {
-                String[] statements = (path.contains("/V2__") || path.contains("/V3__") || path.contains("/V4__") || path.contains("/V5__"))
+                String[] statements = (path.contains("/V2__") || path.contains("/V3__") || path.contains("/V4__") || path.contains("/V5__") || path.contains("/V6__"))
                         ? sql.split("(?m)^-- @statement\\s*$") : sql.split(";");
                 for (String part : statements) {
                     if (!part.isBlank()) statement.execute(part);
