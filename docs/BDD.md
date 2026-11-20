@@ -1,4 +1,4 @@
-# Executable BDD contract — rounds 001 and 002
+# Executable BDD contract — rounds 001–003
 
 ## Standalone JDK 21
 `bash run-tests.sh`
@@ -25,5 +25,12 @@ Given the same journal ID and changed amount, then reject.
 Given insufficient funds, then reject and preserve both account balances.
 Given 12 concurrent debits of 10 from a balance of 100, then exactly 10 succeed, 2 fail, and sum remains 100.
 All tests use unique IDs and a disposable PostgreSQL service; no real funds.
+
+## Round 003 PostgreSQL BDD and negative contract
+Given an unbalanced journal inserted via direct SQL, when COMMIT is attempted, the deferred constraint trigger rejects SQLSTATE 23514 and rolls back the entire journal.
+Given a committed paper journal, when any entry is UPDATEd or the journal is DELETEd, then reject with SQLSTATE 55000 and preserve the original balances.
+Given a legitimately funded paper account, when a privileged SQL UPDATE changes its balance without a journal, then `verifyConservation()` detects drift; the test restores the original balance.
+Given simulated SQLSTATE 40001 on the first two connection attempts, when the bounded retry helper posts the same journal ID, then exactly one journal is posted and the helper succeeds on the third attempt.
+Given uncertain SQLSTATE 08006, when the helper posts, then it rejects without automatic retry. Bad maxAttempts also rejects.
 
 **Gate:** mark round Accepted only after CI green. Round 003 should address transactional failure/retry and DB-side conservation verification. Round 004 should add available/locked balances before connecting the matching engine.
