@@ -1,7 +1,7 @@
 # Crypto Trading Platform — 100-round verified progress
 
 ## Accounting (2026-11-21)
-**Submitted 11; Accepted 7/100; Failed 1 (R001); Pending 3 (R009–R011 site release and CI reconciliation).** Do not count UI changes as Accepted until the exact deployed main SHA, public Chromium and GitHub CI are verified.
+**Submitted 12; Accepted 7/100; Failed 1 (R001); Pending 4 (R009–R012 site Production SHA/release gates).** Do not count UI changes as Accepted until the exact deployed main SHA, public Chromium and GitHub CI are verified.
 - R002–R008 source-of-truth development branch: [feat/round-002-postgres-ledger-20261120](https://github.com/twappleon/Crypto-Trading-Platform/tree/feat/round-002-postgres-ledger-20261120). These backend changes are **not yet merged to main**, and are **not serving the website**.
 - Public website is reachable at **https://crypto-trading-platform-demo.vercel.app/**; source is [main/web](../web). [Public HTTPS + desktop/mobile Chromium release gate SUCCESS #44812029002](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44812029002), HTML byte-for-byte matches GitHub main at [e622890](https://github.com/twappleon/Crypto-Trading-Platform/commit/e62289047526bca5218a57a63fabd7070d029490). This is still browser-only simulated state, NOT backend integration.
 - Vercel project `crypto-trading-platform-demo` has three READY deployment records and a public production alias. However recorded target=production commit [a70b3f4](https://github.com/twappleon/Crypto-Trading-Platform/commit/a70b3f4c640698141e073b1b3801c9929ffbf013) belongs to the feature branch and NOT latest `main`; that historical feature-branch deployment has been superseded by READY main-origin Production deployment dpl_4ymvDQTGJyPiBc2X698SDWwCFZZ6 at 77b0619; v0.4 requires its own source deployment. Public site content matches main; SHA provenance does not. Details in [SITE_RELEASE.md](SITE_RELEASE.md).
@@ -50,3 +50,9 @@ Submitted R010 includes real source changes, exact-SHA green CI for site and cor
 
 ## Latest status R011 (post-merge)
 Submitted 11, Accepted **7/100**, Failed 1 (R001), Pending R009/R010/R011. PR source SHA `fdd22b0` has passing Site+Core BDD CI; code merged at `a9b5eab`. Earlier main `77b0619` is Production READY; newer `a9b5eab` Production update is blocked by Vercel quota 402, and public exact SHA/live browser gate has NOT passed for v0.4. Next run must prioritize release, not misreport success. [Details](ROUND_011_REPORT.md).
+
+## Round 012 submission — exact synthetic reserve previews
+- **Status:** SUBMITTED / PENDING, not Accepted. Source and tests: [R012 branch](https://github.com/twappleon/Crypto-Trading-Platform/tree/feat/round-012-demo-reserve-preview-20261121); [report](ROUND_012_REPORT.md).
+- **Meaningful source change:** browser-only precise BUY USDC/Sell BTC hold and available balance preview, insufficiency warning, side-switch and after-cancel recalculation, large integer formatting. Offline simulated funds only; `main` Production has not yet been proven for v0.5.
+- **BDD:** isolated DOM tests for exact 0.07-cent-ceiled USDC case, fully locked quote, SELL available/overage, exponent invalid, cancel-and-recalculate; real Chromium desktop/390px assertions plus screenshot artifacts. GitHub run, PR, merged SHA, Vercel READY SHA and public browser gate recorded only once actually verified.
+- **Gate:** do not add Accepted until a successful public release on the exact `main` SHA. Existing historical Accepted=7/100 unchanged. Highest P0 next: `main` to Vercel Production, HTTPS HTML hash and browser proof.

@@ -34,3 +34,6 @@ R011 merged to main as [a9b5eab](https://github.com/twappleon/Crypto-Trading-Pla
 
 ## P0 quota-conservation configuration
 Vercel project `crypto-trading-platform-demo` was updated with `previewDeploymentsDisabled=true` to stop PR preview deployments consuming the limited deployment quota while public main Production is blocked. This is a reversible project setting; PR source/test evidence remains provided by GitHub Actions desktop/mobile Chromium. A later production rollout must be verified explicitly with READY, main SHA and public URL BDD. No billing plan/security setting was changed.
+
+## R012 planned release check — v0.5 exact browser-only hold preview
+The R012 website and executable browser BDD live on `feat/round-012-demo-reserve-preview-20261121`. Prior verified Production deploy remains `dpl_4ymvDQTGJyPiBc2X698SDWwCFZZ6`, based on **main 77b0619** (v0.3); current `main` is newer and cannot be called deployed by inference. Proceed through PR CI, merge, explicit Production attempt, READY metadata `githubCommitRef=main`, SHA matching exact merged `main`, unauthenticated HTTPS 200, public HTML SHA-256 equality, and real Chromium desktop/390px tests with screenshots. If daily quota returns 402, record it and keep R009–R012 pending; never count or bill automatically.

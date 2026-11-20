@@ -55,3 +55,13 @@ Run `node web/site-smoke.test.cjs`, `node web/site-interaction.test.cjs` and `no
 - Given an accepted SELL, BTC reserve uses exact integer 0.000001 units. A repeated cancel or cancel-all cannot double-release synthetic collateral.
 - In real Chromium on both 1366px desktop and 390px mobile, verify v0.4 marker, 0.07 hold, 99999.93 available and complete release, plus existing reset, stale-button, and network-isolation checks.
 - **Release acceptance:** production target READY, git ref=main, githubCommitSha matches release source SHA, public HTTP 200, same-HTML hash, public Chromium BDD and Site/Core GitHub CI SUCCESS. If any fail, keep Round 011 pending.
+
+## Round 012 — exact reserve preview / negative BDD
+Run `node web/site-smoke.test.cjs && node web/site-interaction.test.cjs` and real Chromium `node web/site-browser.test.cjs`. All remain offline PAPER/SANDBOX.
+- Given BUY 64275.01 x 0.000001 BTC, the preview shows **Hold 0.07 USDC** and **Available 100,000.00 USDC**, matching the integer-cent reservation after submitting.
+- Given a fully held synthetic USDC account, a subsequent BUY shows **Insufficient demo balance** before submit and clicking submit still fails without balance/history change.
+- Given SELL 1.500001 BTC, preview reserves exactly **1.500001 BTC** and shows **Available 2.000000 BTC**; SELL 2.000001 must warn before submit.
+- Given negative, exponent, >2-price-decimal, >6-quantity-decimal or oversized amount, preview must NOT describe the input as a valid order; submit must still reject.
+- Given Cancel / Cancel All / Reset, the preview refreshes without duplicating credits. Repeated Cancel All and detached historical Cancel buttons must not restore more than originally reserved.
+- The preview is explicitly **browser-only**. No external calls, storage APIs, or claims of actual market quotes, real fills or persistence may appear.
+- Acceptance additionally requires green GitHub Site + Core CI, merged `main`, Vercel Production READY with exactly that `main` commit SHA, HTTP 200 and matching public HTML hash, and public desktop/mobile Chromium with screenshots. Otherwise the round remains Pending.
