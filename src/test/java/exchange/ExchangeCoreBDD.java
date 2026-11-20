@@ -34,6 +34,9 @@ public final class ExchangeCoreBDD {
   rejects(()->l.transfer("t2","alice","bob","USDC",d("61")));
   ok(l.balance("alice","USDC").compareTo(d("60"))==0,"no partial overdraft");
   rejects(()->l.post("bad","USDC",Map.of("alice",d("1"),"bob",d("1"))));
+  var withNull = new java.util.HashMap<String,BigDecimal>();
+  withNull.put("alice",d("-1"));withNull.put("bob",null);
+  rejects(()->l.post("null-entry","USDC",withNull));
   Book self=new Book();self.submit("same",Side.SELL,d("10"),d("1"));
   rejects(()->self.submit("same",Side.BUY,d("10"),d("1")));
   Book multi=new Book();multi.submit("a",Side.SELL,d("10"),d("1"));multi.submit("same",Side.SELL,d("11"),d("1"));

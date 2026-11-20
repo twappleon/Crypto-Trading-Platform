@@ -1,15 +1,37 @@
-name: Core BDD
+name: Paper Exchange BDD
 on:
   push:
   pull_request:
 jobs:
   test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: paper
+          POSTGRES_USER: paper
+          POSTGRES_PASSWORD: paper
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U paper -d paper"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 15
+    env:
+      POSTGRES_JDBC_URL: jdbc:postgresql://localhost:5432/paper
+      POSTGRES_USER: paper
+      POSTGRES_PASSWORD: paper
+      REQUIRE_POSTGRES_TESTS: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: '21'
-      - name: Execute BDD
+          cache: maven
+      - name: Standalone negative BDD
         run: bash run-tests.sh
+      - name: PostgreSQL integration and regression BDD
+        run: mvn -B -ntp test

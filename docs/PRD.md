@@ -1,10 +1,78 @@
-# Crypto Trading Platform MVP — PRD v0.1
-Scope: secure auth + 2FA, third-party sandbox KYC, paper wallet journal, limit/market spot trading, price-time matching, WebSocket data, admin RBAC, audit, fees and monitoring.
-Stack: Java 21/Spring Boot, PostgreSQL, Redis, Next.js. One deterministic sequencer per market pair. Double-entry postings atomically coupled to reservations and settlement.
-Milestone 1: architecture + executable paper-only domain prototype.
-Milestone 2: auth, MFA, KYC sandbox and admin.
-Milestone 3: PostgreSQL durable double-entry ledger and holds.
-Milestone 4: engine, trading API and market data.
-Milestone 5: security, load tests, E2E and deployment.
-P0 gates: per-asset conservation, precision, duplicate request conflict, durable audit and reconciliation, crash-safe replay, no negative user balances, no access across roles, no live funds until independent compliance/security assessment.
-Out of scope for MVP: real asset custody, on-chain withdrawals, live capital and regulated exchange launch.
+# Crypto Trading Platform MVP — PRD v0.3
+
+## Purpose and safety boundary
+Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPER funds only; no real trades, live capital, private-key storage, on-chain deposits/withdrawals or public financial operation. Licenses, custody, KYC contracts, third-party audit and incident response remain independent launch gates.
+
+## Modules and acceptance ordering
+1. P0: matching correctness; durable PostgreSQL double-entry ledger; user available/held balances; atomic reserve/fill/release; idem keys and concurrent settlement; crash replay and reconciliation; invariant-based BDD.
+2. P1: Spring Boot secure REST and WebSocket, authentication/MFA, KYC sandbox adapter, market data, fees, admin RBAC and full audit.
+3. P2: Next.js paper trading front end, container deployment, load testing, abuse and end-to-end browser/security verification.
+
+## Ledger design (Round 002)
+- Accounts keyed by (asset, account ID), numeric(38,18); treasury is a synthetic negative-balance paper funding account.
+- Journals have globally unique IDs and deterministic SHA-256 canonical request fingerprints.
+- Journal insert, account row locks, debits/credits and entries commit or rollback atomically in PostgreSQL.
+- A repeated ID with the same normalized amounts is a no-op; a repeated ID with different intent is a conflict.
+- Reject unsafe account/asset IDs, zero-value entries, unbalanced journals, precision overflow and overdrafts.
+- SQL check constraints prevent negative user balances, foreign keys protect account/journal references.
+- All account rows locked in canonical sort order to avoid write-skew/most deadlocks.
+- Integration CI: PostgreSQL 16 service; JUnit tests for replay/idempotency, conservation, overdraft and concurrent debits.
+
+## Round 003 conservation and retry hardening
+- Additive V2 schema installs deferred PostgreSQL constraint triggers: commits reject newly inserted journals without at least two entries summing to zero. Entries and journal records reject SQL UPDATE/DELETE.
+- Read-only `verifyConservation()` detects per-account derived-balance drift and incomplete/unbalanced journals. It is a diagnostic operation, never auto-repairs financial data.
+- `postWithRetry(id, asset, entries, maxAttempts)` retries only SQLSTATE 40001 (serialization) and 40P01 (deadlock), bounded to 1–5 attempts using the exact same journal ID. Ambiguous commit failure (08006), constraint errors and overdrafts fail closed.
+- V2 disposable migration uses explicit `-- @statement` boundaries to keep PL/pgSQL semicolons within SQL function bodies; production requires a versioned migration tool and least-privilege DB roles.
+- Negative BDD includes direct SQL unbalanced insert rollback at COMMIT, forbidden rewrites/deletes, simulated transient SQLSTATE retry and uncertain-commit fail-closed behavior, and deliberate privileged balance drift detected/restored.
+
+## Known P0 limitations
+- A PAPER settlement primitive now atomically couples two asset journals, order holds, and fill receipt when given an explicit maker/taker pair. Automated matching sequencer, price/time enforcement across competing orders, and crash replay are still absent.
+- Database triggers defend ordinary writes but are not tamper-proof against database owners/superusers. No least-privilege DB roles, production migration governance, scheduled reconciliation/alerting, ledger rebuild/snapshot or end-to-end settlement coupling.
+- Round 002 is a paper-only proof, not evidence of production security.
+- Launch requires security review and legal/compliance sign-off.
+
+
+## Round 004 — durable available/locked PAPER funds
+- V3 adds `paper_ledger_holds` keyed by immutable operation ID: asset/account/amount and ACTIVE or RELEASED state. All financial amounts remain synthetic.
+- `PaperHoldService.reserve()` performs a PostgreSQL transaction with an account-row `FOR UPDATE` lock, checks total minus active holds, then persists the hold. Exact duplicate operation IDs are no-ops, reused IDs with changed intent are rejected. Released IDs never re-activate.
+- `PaperHoldService.release()` checks owner/asset and serializes on the same parent account row. Duplicate release is a no-op, not a second credit.
+- Every `PostgresLedger.post()` balance debit now checks `new_total >= sum(active holds)` while the parent account is locked. Ordinary journal transfers cannot spend locked funds.
+- Point-in-time balance API returns `total`, `locked` and `available` from a single repeatable-read snapshot. Read-only conservation audit flags negative available funds, in addition to historical ledger drift.
+- This is NOT order reservation / matching-engine settlement; future rounds must atomically consume holds for fills and fees. No release by unauthenticated public clients, no custody integration.
+- Invariant: account.balance == sum(journal deltas), active holds >= 0, and every non-treasury available = total - active holds >= 0.
+- Migration is disposable-schema DDL, not a production Flyway governance mechanism. DB privileged writers can bypass application rules; separate roles and append-only permissions remain open security gates.
+
+
+## Round 005 — durable paper limit-order intent / collateral (not matching)
+- `paper_limit_orders` stores immutable owner, market, side, price, quantity, held asset/amount, and order hold ID. BUY reserves `price * quantity` quote asset; SELL reserves `quantity` base asset; mathematical values must fit NUMERIC(38,18).
+- `PaperOrderService.place()` persists the hold and the order within a **single PostgreSQL transaction**, under the parent ledger-account `FOR UPDATE` lock. Insufficient available balance or an order/hold ID conflict rolls back both. The order ID is an immutable idempotency key; exact retries do not duplicate reservations, even after cancellation.
+- `PaperOrderService.cancel()` checks ownership and atomically marks the OPEN order CANCELED and releases its ACTIVE collateral; repeated cancellation is a no-op. Direct public `PaperHoldService.reserve/release` cannot mutate `order:` hold IDs.
+- The untrusted public client must not be granted raw database access; service-level owner values must eventually derive from authenticated identity, not request bodies.
+- **Not yet implemented:** matching/cancel race arbitration under durable sequencer, partial fills, per-fill reserved amount reduction, atomic trades/settlement, fees, market orders, replay/reconciliation of orders. Order placement does not submit to `ExchangeCore.Book`. No real trading.
+
+
+## Round 006 — atomic explicit-pair PAPER settlement
+- V5 adds durable remaining quantity, PARTIAL/FILLED order states, immutable trade receipts, and validated lifecycle constraints. Historic V4 limit/quantity/reserved_amount intent remains immutable; active hold amount alone shrinks for remaining collateral.
+- \`PaperSettlementService.settle(tradeId,makerId,takerId,quantity)\` requires matching assets, opposite sides, crossing limits, distinct owners, positive bounded quantity, and active unfilled orders.
+- Maker order's limit price sets execution price. Buyer consumes exactly executed quote cost; seller consumes executed base quantity. Buyer receives base, seller receives quote in **two balanced journals in one transaction**; paper limit-price surplus is no longer locked.
+- Shared sorted account row locks precede sorted order locks, matching the order cancellation lock discipline. Fills and cancellation serialize and cannot both spend the same collateral. No swallowed uncertain commits; callers must reconcile failures.
+- On partial fill each hold equals limit-price * remaining for buy, or remaining base for sell; on full fill holds are RELEASED. Canceling PARTIAL releases only unfilled collateral. Each committed fill adds immutable \`paper_trades\` receipt; exact trade-id replay is read-only, intent changes reject.
+- Conservation: per-asset journal deltas sum to zero; account balances equal journal sum; account total never less than active holds. This is **not** a market price/time sequencer: a trusted upstream component must determine maker/taker, prevent unfair maker selection, and authorize calls; do not expose this service as a public endpoint.
+- Execution precision currently rejects nonrepresentable prices/costs rather than rounding; deterministic fee and rounding policy is Round 007. Production migration control, retry semantics for contention, failover/replay and security hardening remain open.
+
+
+## Round 007 — deterministic PAPER maker/taker fee settlement
+- Immutable `PaperFeePolicy(makerBps,takerBps)` permits rates 0..1000 basis points; zero-fee constructor preserves existing demo behavior. There is no dynamic privileged admin setting yet.
+- Fee policy: **BUY pays BASE asset from received quantity**, **SELL pays QUOTE asset from received trade cost**. Maker/taker rate selection depends on the resting maker side and not user input. Fee amount is floor(gross × rate / 10,000) to 18 decimal places using BigDecimal, never binary floating point.
+- Buy-side limit reserve remains price × unfilled quantity; settlement deducts the execution cost from quote collateral only, never extra fee from reserved quote balance. Buyer receives base minus buyer fee; seller receives quote minus seller fee; synthetic `paper_fee_vault` receives corresponding fees in each asset.
+- Each fill creates exactly two per-asset zero-sum journal groups (including fee-vault credits when nonzero) in the same PostgreSQL transaction as order states, holds and an immutable trade receipt. V6 records maker/taker rates and both charged fee amounts for reconciliation. Exact replay is idempotent only under the same fee schedule; changed rates reject.
+- Require representable NUMERIC(38,18) quantity and cost; fail closed rather than silently rounding down trade cost. Extremely small fees round to zero, explicitly documented as demo dust policy. Reject zero or negative net receipts.
+- Fee-vault is reserved from PAPER order creation, but no scoped service identity, production least-privilege DB roles, accounting tax treatment, configurable asset units or live fee schedule exists. This is a prototype, not a regulated revenue account.
+
+
+## Round 008 — PAPER transactional outbox and crash-safe at-least-once delivery
+- V7 creates one `paper_trade_outbox` row per immutable trade ID, FK-bound to `paper_trades`. `PaperSettlementService.settle()` writes the outbox intent **before the same commit** as both journals, holds, order updates and trade receipt. Failed settlements leave no event.
+- `PaperOutboxService.claimNext()/claim(tradeId)` lease an eligible event for 60 seconds using PostgreSQL `FOR UPDATE OF o SKIP LOCKED`, row-lock fencing and a fresh UUID token. A live lease is exclusive; abandoned/expired leases are eligible for re-claim after restart.
+- `acknowledge` only succeeds while the matching lease token remains current and unexpired. Delivered events never requeue; stale/wrong/duplicate acknowledgements cannot mark delivered.
+- `paper_trade_consumer_inbox` has unique (consumer_id,trade_id) receipts to demonstrate durable consumer deduplication. A future transport must commit any actual side effect and receipt in **one consumer-side transaction**. This prototype does not deliver to a real network or guarantee external exactly-once effects.
+- Explicit-pair settlement still lacks a persisted price/time FIFO matching sequencer. All balances and events remain synthetic; no customer assets, custody, live orders, chain transactions, or production credentials.
