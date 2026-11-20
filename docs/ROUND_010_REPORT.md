@@ -1,29 +1,26 @@
-# Round 010 — website-first paper terminal safety (submission)
-Date: 2026-11-21 (Asia/Phnom_Penh)
-Status: **SUBMITTED / NOT ACCEPTED**. Existing accepted backend rounds remain 7/100. The public Vercel release gate must pass before this website milestone can be accepted.
+# Round 010 — Main-site v0.3 paper terminal (2026-11-21)
+**Submitted, not yet Accepted:** cumulative **7/100 Accepted**, 10 submitted. Live website works, but strict production Git SHA provenance is not yet verified.
 
-## Functional source change
-- `web/index.html`: visible **Cancel all open demo orders** control; convert only currently open orders to CANCELED history, remove reservations in one local state update and re-render available/locked synthetic USDC/BTC balances.
-- Preserve browser-lifetime order IDs across Reset so a retained stale Cancel button from an earlier reset cannot cancel a new synthetic order whose ID was recycled. Reset still clears all visible demo balances, order history and orders.
-- Visible release marker v0.3. No new network calls, credentials, asset custody, execution, KYC, deposits, withdrawals or persistence.
+## Meaningful source changes merged
+[PR #2](https://github.com/twappleon/Crypto-Trading-Platform/pull/2) was squash merged into `main`: [9c289fc](https://github.com/twappleon/Crypto-Trading-Platform/commit/9c289fc67059ed5dfe5c8766899e69eee8caa251).
+- `web/index.html` v0.3: "Cancel all open demo orders" safely releases BUY/SELL synthetic holdings, retains truthful CANCELED session history, repeat no-op. `seq` remains monotonic across Reset to prevent a retained stale cancel DOM handler from canceling a newly created order.
+- `web/site-interaction.test.cjs` and `web/site-smoke.test.cjs` test safe reserve/cancel/history/reset, invalid precision/overdraft, stale detached handler, no network persistence.
+- `src/main/java/exchange/ExchangeCore.java`: fix inherited R001 `Map.of.containsValue(null)` NPE; `src/test/java/exchange/ExchangeCoreBDD.java`: reject null entries without account mutation or runtime NPE.
+- `web/site-browser.test.cjs`: real Chromium 1366×768 desktop and 390×844 mobile checks including logged-out HTTP response, paper labeling, BUY+SELL synthetic reserve, overdraft, stale cancel, Cancel All, reset/reload, cross-origin requests, horizontal overflow and screenshots.
+- `.github/workflows/site.yml` runs Node VM and Chromium screenshot E2E using Playwright 1.64.1 (updated from 1.56.0 after GitHub Ubuntu 26.04 install failure).
+- `web/site-public-verify.cjs` and `.github/workflows/public-site.yml` validate real public HTTPS, byte-for-byte HTML SHA256 match to `main/web/index.html`, desktop/mobile Chromium E2E and screenshot artifacts.
 
-## Executed CI on exact source/test SHA
-- [Website smoke + interaction BDD SUCCESS — PR run 44811445804](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44811445804), head `4041e6bf9d081bc685c7e16a70e9b5c6809def40`.
-- [Core JDK BDD SUCCESS — PR run 44811445593](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44811445593), same head. Legacy `Map.of.containsValue(null)` NPE on `main` was fixed with null-safe validation and negative regression scenario. Previous red core CI was investigated from actual job logs.
-- The site is **still not Accepted** because no Vercel production URL exists.
+## Actual CI and public browser evidence
+- [Main Site Smoke / local Chromium SUCCESS #44811844796](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44811844796) on merge SHA `9c289fc`.
+- [Main Core JDK BDD SUCCESS #44811844962](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44811844962), same merge SHA.
+- [**Public HTTPS + desktop/mobile Chromium SUCCESS #44812029002**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44812029002) on `main` source `e62289047526bca5218a57a63fabd7070d029490`. The GitHub runner performed an unauthenticated HTTPS GET to **https://crypto-trading-platform-demo.vercel.app/** and asserted HTTP 200 and the exact same SHA256 HTML bytes as checked-out `main/web/index.html`.
+- Public browser E2E against that real URL passed desktop and mobile checks, with [artifact `paper-site-public-desktop-mobile` on Run #44812029002](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44812029002), artifact ID 14666238069, 381645 bytes. These are actual browser screenshots, not a mocked image.
+- Static UI remains synthetic local browser memory. There is NO connected live exchange, real price feed, trade execution, KYC, persistence, custody, deposits or withdrawals.
 
-## BDD and independent checks
-- `node web/site-smoke.test.cjs`: assert cancel-all control exists, open-only batch selection, and reset no longer recycles session IDs.
-- `node web/site-interaction.test.cjs`: assert old cancellation handler after reset cannot remove or unlock new order; BUY+SELL multi-cancel restores BOTH assets; repeated empty cancel-all does not mutate history/balances.
-- GitHub Actions `.github/workflows/site.yml` runs both scripts on PR and push. Exact PR SHA and run status must be verified separately.
-- Browser/HTTP screenshot and iPhone-width E2E: BLOCKED until Vercel production has a READY deployment URL. No screenshots or HTTP 200 claims without observation.
+## Remaining blocking gate
+Vercel project `crypto-trading-platform-demo` has a production READY deployment (`dpl_74a8XCKZFpQgzA1GkWM5oiERd3d3`), but its Git metadata is feature branch `feat/round-010-site-order-safety-20261121` at `a70b3f4c640698141e073b1b3801c9929ffbf013`, not the exact current GitHub `main` SHA. This deployment contains the **identical HTML bytes** to main; the public website and browser checks are real, but deployment revision provenance remains unverified. A new explicit Vercel Production deployment API attempt returned **HTTP 402** `api-deployments-free-per-day`, `retryAfter=86400`; no local authorized Vercel CLI fallback.
 
-## Known release gate / next step
-- Vercel `crypto-trading-platform-demo` still showed `live=false`, zero deployments and no domain at run start. Previous production deploy was rejected with 402 daily deployment quota; retry on 2026-11-21 again returned HTTP 402 `api-deployments-free-per-day` with `retryAfter=86400`; team/project protection is off. No mapped CLI credential fallback was available. This is a transient quota, not code readiness.
-- Push tested changes through PR to `main` only after a green CI, then deploy `main:web` to Vercel Production, verify public HTTPS without authentication and perform desktop/mobile order/cancel/reset checks. Until all release gates pass, do not increment Accepted.
-- This is entirely local browser state; no PostgreSQL integration is claimed.
+**Decision:** R010 remains PENDING/NOT Accepted under the exact-SHA requirement. R009 also remains pending; 7/100 Accepted stays unchanged. Next release gate: deploy the then-current `main` SHA to Vercel Production when allowed, verify `READY`, `target=production`, matching `githubCommitSha`, then rerun public CI. Do not award 1 or 2 rounds just for a public site on an older feature SHA.
 
-## Browser E2E code added
-- `web/site-browser.test.cjs` now runs a **real headless Chromium** (not just VM) at desktop 1366×768 and iPhone-like 390×844. Checks include 200 response, safety labeling, synthetic buy/sell reserve, insufficient funds, stale detached cancel handler, Cancel All, repeated no-op, reload, external traffic, no horizontal overflow and screenshot capture.
-- `.github/workflows/site.yml` installs Playwright Chromium, runs test after Node VM BDD and uploads `artifacts/site-desktop.png`, `artifacts/site-mobile.png` as a GitHub Actions artifact. Public URL can be tested with `SITE_URL=https://... node web/site-browser.test.cjs` **only after HTTPS exists**.
-- CI status for this new browser E2E and screenshots must be verified before counting any tests as passed. Do not confuse locally hosted browser HTTP 200 with a public Vercel HTTPS check.
+## Links
+[Live paper-only demo](https://crypto-trading-platform-demo.vercel.app/) · [GitHub PR #2](https://github.com/twappleon/Crypto-Trading-Platform/pull/2) · [Public HTTPS Browser E2E](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44812029002) · [Current progress](PROGRESS.md) · [Deployment safety](SITE_RELEASE.md)
