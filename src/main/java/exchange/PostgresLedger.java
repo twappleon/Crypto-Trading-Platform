@@ -48,7 +48,7 @@ public final class PostgresLedger {
                 throw new IllegalStateException("cannot read ledger migration", e);
             }
             try (Statement statement = c.createStatement()) {
-                String[] statements = path.contains("/V2__")
+                String[] statements = (path.contains("/V2__") || path.contains("/V3__"))
                         ? sql.split("(?m)^-- @statement\\s*$") : sql.split(";");
                 for (String part : statements) {
                     if (!part.isBlank()) statement.execute(part);
