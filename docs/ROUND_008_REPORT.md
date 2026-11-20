@@ -10,7 +10,9 @@ Date: 2026-11-21. Branch: `feat/round-002-postgres-ledger-20261120`.
 
 ## Verification
 - Code/tests pushed to [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1).
-- **PENDING**: CI exact-SHA status, JUnit aggregate count, no failures/errors/skips, and final docs SHA. Do NOT count Round 008 Accepted until green GitHub Actions evidence is attached.
+- **Accepted** (7/100 cumulative): code/test SHA [f9c9c3d](https://github.com/twappleon/Crypto-Trading-Platform/commit/f9c9c3d9cabd023a2ec21130011f7e33f399faa7), [GitHub Actions Run #126](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44793845793) **SUCCESS**.
+- Verified GitHub job logs: Standalone BDD PASS; Maven/JUnit with PostgreSQL 16 **33 tests run; 0 failures, 0 errors, 0 skipped; BUILD SUCCESS**, including 5 Round 008 integration cases.
+- Documentation SHA is separate and must be verified in GitHub Actions before it is described as green.
 
 ## Known limitations and next steps
 - Outbound delivery is at-least-once, not exactly-once; a future consumer must atomically commit its own side effect and dedup marker.
