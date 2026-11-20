@@ -14,7 +14,7 @@ const url = process.env.SITE_URL || 'https://crypto-trading-platform-demo.vercel
   console.log('FINAL_URL=' + response.url);
   assert.equal(response.status, 200, 'production must serve HTTP 200 without login');
   const published = await response.text();
-  for (const term of ['PAPER / SANDBOX', 'Synthetic market data', 'Cancel all open demo orders', 'Prototype v0.5', 'no executions']) {
+  for (const term of ['PAPER / SANDBOX', 'Synthetic market data', 'Cancel all open demo orders', 'Prototype v0.6', 'no executions']) {
     assert.ok(published.includes(term), 'public site is missing release marker: ' + term);
   }
   const local = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
@@ -22,5 +22,5 @@ const url = process.env.SITE_URL || 'https://crypto-trading-platform-demo.vercel
   console.log('SOURCE_SHA256=' + hash(local));
   console.log('PUBLIC_SHA256=' + hash(published));
   assert.equal(hash(published), hash(local), 'public HTML differs from main/web/index.html');
-  console.log('PASS: public HTTPS 200 and byte-for-byte matching PAPER v0.5 website');
+  console.log('PASS: public HTTPS 200 and byte-for-byte matching PAPER v0.6 website');
 })().catch(e => { console.error('PUBLIC RELEASE GATE FAILED:', e); process.exitCode = 1; });
