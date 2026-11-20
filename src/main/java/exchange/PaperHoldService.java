@@ -65,6 +65,22 @@ public final class PaperHoldService {
         try (Connection c = connections.open()) {
             c.setAutoCommit(false);
             try {
+                // Detect globally reused IDs before accessing the requested account:
+                // a conflicting owner/asset must be classified as an ID conflict,
+                // even if that owner has no funded paper account.
+                try (PreparedStatement existing = c.prepareStatement(
+                        "SELECT asset, account_id, amount FROM paper_ledger_holds WHERE id=?")) {
+                    existing.setString(1, id);
+                    try (ResultSet r = existing.executeQuery()) {
+                        if (r.next()) {
+                            if (!asset.equals(r.getString(1)) || !owner.equals(r.getString(2))
+                                    || normalized.compareTo(r.getBigDecimal(3)) != 0)
+                                throw new IllegalArgumentException("hold idempotency conflict");
+                            c.rollback();
+                            return false;
+                        }
+                    }
+                }
                 BigDecimal total = lockAccount(c, owner, asset);
                 // The common account-row lock serializes reserve/release/debit operations.
                 // Check an existing ID under the lock before evaluating available funds.
