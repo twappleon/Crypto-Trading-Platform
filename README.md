@@ -3,7 +3,7 @@
 > **Release status: NOT LIVE.** The public Vercel production deployment is blocked by a Hobby-team daily deployment quota (HTTP 402, `api-deployments-free-per-day` as of 2026-11-21). This repository link is **not** a public working trading site. Do not send any cryptocurrency, keys or KYC documents.
 
 ## Website-first P0
-The `main` branch contains the static responsive v0.2 paper trading terminal in [`web/index.html`](web/index.html): fabricated BTC/USDC chart/depth, simulated buy/sell limit orders, available/locked demo funds, cancellation/reset and session history displaying only **OPEN** and **CANCELED**. Reload clears the session. There are no fills, matching, live prices, persistent balances, external API calls or custody. The display is a local educational demonstration.
+The `main` branch contains the static responsive v0.3 paper trading terminal in [`web/index.html`](web/index.html): fabricated BTC/USDC chart/depth, simulated buy/sell limit orders, available/locked demo funds, single/bulk cancellation, safe reset and session history displaying only **OPEN** and **CANCELED**. Reload clears the session. There are no fills, matching, live prices, persistent balances, external API calls or custody. The display is a local educational demonstration.
 
 ```bash
 node web/site-smoke.test.cjs
@@ -17,4 +17,4 @@ Vercel project `crypto-trading-platform-demo` is linked to GitHub `main`, root `
 ## Backend development (separate branch)
 The [backend feature branch](https://github.com/twappleon/Crypto-Trading-Platform/tree/feat/round-002-postgres-ledger-20261120) and [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1) contain a Java 21/PostgreSQL paper ledger, holds, order reservations, explicit-pair atomic settlement, maker/taker fee logic, and transactional outbox. R002–R008 have **7 Accepted / 100** recorded independent test/CI outcomes. These modules are not merged into the website, and are **not** production funds-safe. The website currently uses only local simulated state.
 
-Next P0: unblock Vercel production quota, deploy the latest `main`, prove public HTTPS and interactive desktop/mobile browser behavior. After that, integrate persistent sandbox backend with authentication, reconciliation, FIFO replay and safety gates. **No real trading, deposits, withdrawals, wallet keys or customer KYC.**
+Round 010 adds Cancel All and guards stale cancellation handlers after reset. Site release remains unverified. Next P0: unblock Vercel production quota, deploy the latest `main`, prove public HTTPS and interactive desktop/mobile browser behavior. After that, integrate persistent sandbox backend with authentication, reconciliation, FIFO replay and safety gates. **No real trading, deposits, withdrawals, wallet keys or customer KYC.**
