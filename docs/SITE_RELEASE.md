@@ -20,3 +20,9 @@
 5. Record final SHA, CI run URL, production URL, HTTP/browser evidence and Accepted decision in [PROGRESS](PROGRESS.md). Keep count unchanged if any gate fails.
 
 Do not substitute the GitHub source link for a public deployed site URL.
+
+## Round 010 site release verification (2026-11-21)
+- Source/test PR branch: [PR #2](https://github.com/twappleon/Crypto-Trading-Platform/pull/2). Exact feature SHA [4041e6b](https://github.com/twappleon/Crypto-Trading-Platform/commit/4041e6bf9d081bc685c7e16a70e9b5c6809def40).
+- Green PR [Site smoke+VM interaction BDD](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44811445804) and [Core JDK BDD](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44811445593) verified for 4041e6b. Baseline main Java NPE repaired with negative test in the PR.
+- Repeat Vercel production deploy request to project `prj_JESXfEsbUcjI6dA6Yoe3VfcV8iPf` via authorized account again returned HTTP **402** `api-deployments-free-per-day`, retryAfter 86400 seconds. Current project `live=false`, zero deployments/domains, no public site to inspect. A local Vercel CLI/auth fallback was not available.
+- R010 remains NOT Accepted. Do not turn CI success into an invented deployed URL, HTTP 200, mobile screenshot or exchange readiness.

@@ -92,4 +92,30 @@ assert.equal(text('usdc'), '100,000.00');
 assert.equal(text('btc'), '2.000000');
 assert.equal(text('count'), '0 open');
 assert.match(markup('history'), /No orders/);
+
+// Round 010: stale DOM cancel handler from before reset must not target a new order
+// with a recycled ID. Order IDs remain monotonic for the browser lifetime.
+click('buyTab'); set('price', '64275'); set('amount', '1'); click('submit');
+assert.equal(text('count'), '1 open');
+assert.equal(text('usdcLocked'), 'Locked: 64,275.00');
+staleCancel.click();
+assert.equal(text('count'), '1 open', 'stale cancel must not remove a new order');
+assert.equal(text('usdcLocked'), 'Locked: 64,275.00', 'stale cancel must not release a new hold');
+click('sellTab'); set('amount', '1'); click('submit');
+assert.equal(text('count'), '2 open');
+assert.equal(text('btcLocked'), 'Locked: 1.000000');
+// Cancel-all preserves honest CANCELED history and restores both balances.
+click('cancelAll');
+assert.equal(text('count'), '0 open');
+assert.equal(text('usdc'), '100,000.00');
+assert.equal(text('btc'), '2.000000');
+assert.equal(text('usdcLocked'), 'Locked: 0.00');
+assert.equal(text('btcLocked'), 'Locked: 0.000000');
+assert.equal((markup('history').match(/CANCELED/g) || []).length, 2);
+click('cancelAll'); // idempotent empty-state action
+assert.equal(text('count'), '0 open');
+assert.equal((markup('history').match(/CANCELED/g) || []).length, 2);
+click('reset');
+assert.match(markup('history'), /No orders/);
+console.log('PASS: 010 stale cancel across reset, cancel-all reserve release, no duplicate mutation');
 console.log('PASS: browser-script BDD buy/sell holds, history statuses, duplicate cancel, overdraft, validation and reset');

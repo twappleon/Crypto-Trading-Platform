@@ -34,3 +34,14 @@ CI: `.github/workflows/site.yml` must execute both tests on the `main` commit.
 - Static gate checks explicit synthetic/data warnings, responsive CSS, and absence of network or storage APIs.
 
 **External release gate:** Vercel Production READY, public HTTPS reachable without authentication, browser order/cancel/reset verified at desktop and mobile widths; until then this site milestone remains PENDING and does not count toward Accepted/100.
+
+## Round 010 — public terminal cancellation safety
+Run `node web/site-smoke.test.cjs` and `node web/site-interaction.test.cjs`.
+- Given an old cancel button for order #1, when resetting a browser session and submitting a new order, clicking that stale button must **not** cancel the new order or release its locked synthetic collateral. Browser-lifetime order IDs must not be recycled.
+- Given two open demo orders (one BUY and one SELL), when `Cancel all open demo orders` is clicked, then both open orders disappear, CANCELED history entries remain, and both synthetic asset reserves release exactly once.
+- Given no open orders, when `Cancel all` is repeated, then balances and order history remain unchanged.
+- Given `Reset`, the visible order history and balances clear but the in-memory next-order ID must remain unique for stale DOM event safety.
+- These Node VM checks are **not** proof of production browser interactions. External public HTTPS desktop/mobile browser E2E and a green GitHub CI are separately required for Accepted.
+
+### Live Chromium desktop/mobile BDD gate
+Run `npm install --no-save --no-package-lock playwright@1.64.1`, `npx playwright install --with-deps chromium`, then `node web/site-browser.test.cjs`. CI `Paper Site Smoke` must execute this in 1366×768 desktop and 390×844 mobile Chromium, producing screenshot artifacts. It must verify HTTP 200 from locally served static page, PAPER/SANDBOX and synthetic data labels, correct BUY reserves, overdraft rejection, stale detached Cancel handler after Reset, SELL reserves, Cancel All of both assets, repeat action idempotency, no cross-origin requests, reload resets and no horizontal overflow. Optional `SITE_URL` points the same script to a REAL public URL. Local HTTP screenshots DO NOT count as published production HTTP/browser E2E; a READY Vercel Production URL must be tested separately.

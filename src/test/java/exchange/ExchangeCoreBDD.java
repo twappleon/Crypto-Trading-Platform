@@ -25,6 +25,10 @@ public final class ExchangeCoreBDD {
   rejects(()->fifo.submit("x",Side.BUY,d("0"),d("1")));
   rejects(()->fifo.submit("x",Side.BUY,d("1"),d("-1")));
   Ledger l=new Ledger();
+  java.util.Map<String,BigDecimal> nullEntry=new java.util.HashMap<>();
+  nullEntry.put("alice",null);nullEntry.put("bob",d("1"));
+  rejects(()->l.post("invalid-null","USDC",nullEntry)); // reject gracefully, no accidental NPE
+  ok(l.balance("alice","USDC").signum()==0,"null ledger intent leaves balance unchanged");
   l.creditForTest("f1","alice","USDC",d("100"));
   l.transfer("t1","alice","bob","USDC",d("40"));
   l.transfer("t1","alice","bob","USDC",d("40"));

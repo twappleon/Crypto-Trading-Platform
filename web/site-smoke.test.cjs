@@ -6,4 +6,8 @@ assert.ok(s.includes("orders=orders.filter"),'cancel must exist');
 assert.ok(s.includes("record.status='CANCELED'"),'cancel must persist visible session status');
 assert.ok(s.includes("history.push({id,side,price:p,qty:q,status:'OPEN'})"),'order history records must be created');
 assert.ok(s.includes('render();calc();'),'initial paint must exist');
+assert.ok(s.includes('id="cancelAll"'), 'must expose Cancel All action');
+assert.ok(s.includes("record.status='CANCELED'"), 'bulk cancellation must retain accurate status');
+assert.ok(!/history=\[\];seq=0/.test(s), 'reset must not recycle order IDs while stale buttons exist');
+assert.ok(s.includes("activeIds=new Set(orders.map(o=>o.id))"), 'mass cancel must target only open orders');
 console.log('PASS: static safety, responsive layout, order entry and cancellation smoke checks');

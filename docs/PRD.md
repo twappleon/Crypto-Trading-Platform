@@ -18,3 +18,6 @@ The user's primary acceptance requirement is an actual public, usable **paper-on
 - Require actual browser interaction BDD (`web/site-interaction.test.cjs`) in addition to static smoke. CI and public URL must be validated on the **same deployed SHA** before Accepted.
 - Vercel quota, authentication protection, blocked access, missing domain, unavailable project, or broken interactive controls are **release blockers**; code pushed alone never counts as site Accepted.
 - PostgreSQL ledger/backend code currently resides on branch `feat/round-002-postgres-ledger-20261120` (7 Accepted/100 as of Round 008). Do not claim it serves web users or merge it blindly into the static site.
+
+## Round 010 website-first safety extension
+The P0 paper terminal must support single cancellation and atomic-in-browser cancel-all of synthetic holds with truthful OPEN/CANCELED session history. Buttons detached before a reset cannot cancel new orders: never recycle browser-lifetime order IDs while listeners can survive. This client-side simulator remains transient, does not persist, fill, or send real market orders. Until a public Vercel HTTPS URL has been authenticated-logout tested on desktop and mobile against the exact SHA and CI is green, the site milestone is pending and not part of the Accepted counter.
