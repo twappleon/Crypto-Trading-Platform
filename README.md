@@ -27,3 +27,7 @@ Do not point this prototype at production credentials. `PostgresLedger.migrate` 
 **Important gaps:** no order-to-ledger reservation and settlement coupling, persistent matching engine, crash recovery, authentication, admin, true KYC provider integration, chain custody, deployment, or independent security review. Commit-time constraint triggers now reject empty/unbalanced new journals and disallow updates/deletes of entries and journal records. Privileged operators can still alter account balances directly: use `verifyConservation()` to detect drift. This remains a disposable proof, not a production hardened ledger. Never represent this as production funds-safe.
 
 A round is **Accepted** only when code changes are real, BDD and CI both succeed, SHA is recorded, and [docs/PROGRESS.md](docs/PROGRESS.md) is updated. Failed and pending rounds do not count.
+
+
+## Round 004 — available / locked PAPER balances
+`PaperHoldService` now persists account reservations in PostgreSQL (`V3__paper_holds.sql`): `reserve(id, owner, asset, amount)`, `release(id, owner, asset)`, and `balance(owner, asset)` returning total / locked / available. The account-row lock serializes hold changes with ledger debits. Double-entry journal history remains the source of total balances; holds are **not** new real-money credits. The order matching engine is not yet atomically coupled to reservations or settlement. Do not use these prototypes with real funds.
