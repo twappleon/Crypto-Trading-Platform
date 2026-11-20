@@ -41,3 +41,11 @@ Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPE
 - This is NOT order reservation / matching-engine settlement; future rounds must atomically consume holds for fills and fees. No release by unauthenticated public clients, no custody integration.
 - Invariant: account.balance == sum(journal deltas), active holds >= 0, and every non-treasury available = total - active holds >= 0.
 - Migration is disposable-schema DDL, not a production Flyway governance mechanism. DB privileged writers can bypass application rules; separate roles and append-only permissions remain open security gates.
+
+
+## Round 005 — durable paper limit-order intent / collateral (not matching)
+- `paper_limit_orders` stores immutable owner, market, side, price, quantity, held asset/amount, and order hold ID. BUY reserves `price * quantity` quote asset; SELL reserves `quantity` base asset; mathematical values must fit NUMERIC(38,18).
+- `PaperOrderService.place()` persists the hold and the order within a **single PostgreSQL transaction**, under the parent ledger-account `FOR UPDATE` lock. Insufficient available balance or an order/hold ID conflict rolls back both. The order ID is an immutable idempotency key; exact retries do not duplicate reservations, even after cancellation.
+- `PaperOrderService.cancel()` checks ownership and atomically marks the OPEN order CANCELED and releases its ACTIVE collateral; repeated cancellation is a no-op. Direct public `PaperHoldService.reserve/release` cannot mutate `order:` hold IDs.
+- The untrusted public client must not be granted raw database access; service-level owner values must eventually derive from authenticated identity, not request bodies.
+- **Not yet implemented:** matching/cancel race arbitration under durable sequencer, partial fills, per-fill reserved amount reduction, atomic trades/settlement, fees, market orders, replay/reconciliation of orders. Order placement does not submit to `ExchangeCore.Book`. No real trading.
