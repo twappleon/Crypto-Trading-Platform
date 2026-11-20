@@ -18,8 +18,15 @@ import java.util.TreeMap;
  */
 public final class PaperSettlementService {
     private final PostgresLedger.Connections connections;
+    private final PaperFeePolicy feePolicy;
+
+    /** Compatibility defaults to no PAPER fees; configure explicitly for a demo market. */
     public PaperSettlementService(PostgresLedger.Connections connections) {
+        this(connections, new PaperFeePolicy(0, 0));
+    }
+    public PaperSettlementService(PostgresLedger.Connections connections, PaperFeePolicy feePolicy) {
         this.connections = Objects.requireNonNull(connections);
+        this.feePolicy = Objects.requireNonNull(feePolicy);
     }
 
     private record Order(String id, String owner, String base, String quote,
@@ -31,7 +38,8 @@ public final class PaperSettlementService {
             return a!=0?a:owner.compareTo(other.owner);
         }
     }
-    private record Receipt(String maker, String taker, BigDecimal quantity) {}
+    private record Receipt(String maker, String taker, BigDecimal quantity,
+                           int makerBps, int takerBps) {}
 
     private static void requireId(String id) {
         if (id == null || !id.matches("[a-zA-Z0-9_-]{1,80}"))
@@ -52,15 +60,25 @@ public final class PaperSettlementService {
     }
     private static Receipt receipt(Connection c,String id) throws SQLException {
         try (PreparedStatement p=c.prepareStatement(
-                "SELECT maker_order_id,taker_order_id,quantity FROM paper_trades WHERE id=?")) {
+                "SELECT maker_order_id,taker_order_id,quantity,maker_fee_bps,taker_fee_bps FROM paper_trades WHERE id=?")) {
             p.setString(1,id);
             try(ResultSet r=p.executeQuery()) {
-                return r.next()?new Receipt(r.getString(1),r.getString(2),r.getBigDecimal(3)):null;
+                return r.next()?new Receipt(r.getString(1),r.getString(2),r.getBigDecimal(3),
+                        r.getInt(4),r.getInt(5)):null;
             }
         }
     }
-    private static boolean same(Receipt r,String maker,String taker,BigDecimal qty) {
-        return r.maker.equals(maker)&&r.taker.equals(taker)&&r.quantity.compareTo(qty)==0;
+    private boolean same(Receipt r,String maker,String taker,BigDecimal qty) {
+        return r.maker.equals(maker)&&r.taker.equals(taker)&&r.quantity.compareTo(qty)==0
+                &&r.makerBps==feePolicy.makerBps()&&r.takerBps==feePolicy.takerBps();
+    }
+    private static Map<String,BigDecimal> netOfFee(String payer,String receiver,
+                                                   BigDecimal gross,BigDecimal fee) {
+        TreeMap<String,BigDecimal> delta=new TreeMap<>();
+        delta.put(payer,gross.negate());
+        delta.put(receiver,gross.subtract(fee));
+        if(fee.signum()>0)delta.put(PaperFeePolicy.FEE_ACCOUNT,fee);
+        return delta;
     }
     private static void pair(Order maker,Order taker) {
         if (maker.id.equals(taker.id)||maker.side==taker.side
@@ -204,9 +222,15 @@ public final class PaperSettlementService {
                 Order buy=initialMaker.side==ExchangeCore.Side.BUY?initialMaker:initialTaker;
                 Order sell=initialMaker.side==ExchangeCore.Side.SELL?initialMaker:initialTaker;
 
+                PaperFeePolicy.Fees planned=feePolicy.calculate(quantity,
+                        initialMaker.price.multiply(quantity),initialMaker.side);
                 List<Account> accounts=new ArrayList<>(List.of(
                         new Account(buy.base,buy.owner),new Account(buy.quote,buy.owner),
                         new Account(sell.base,sell.owner),new Account(sell.quote,sell.owner)));
+                if(planned.buyerFeeBase().signum()>0)
+                    accounts.add(new Account(buy.base,PaperFeePolicy.FEE_ACCOUNT));
+                if(planned.sellerFeeQuote().signum()>0)
+                    accounts.add(new Account(sell.quote,PaperFeePolicy.FEE_ACCOUNT));
                 accounts.sort(Account::compareTo);
                 for(Account a:accounts)ensureAccount(c,a);
                 for(Account a:accounts)lockAccount(c,a);
@@ -233,21 +257,28 @@ public final class PaperSettlementService {
 
                 BigDecimal cost=maker.price.multiply(quantity);
                 PostgresLedger.requirePositiveAmount(cost);
+                PaperFeePolicy.Fees fees=feePolicy.calculate(quantity,cost,maker.side);
                 buy=maker.side==ExchangeCore.Side.BUY?maker:taker;
                 sell=maker.side==ExchangeCore.Side.SELL?maker:taker;
                 consumeHold(c,maker,quantity);
                 consumeHold(c,taker,quantity);
-                journal(c,baseJournal,maker.base,Map.of(sell.owner,quantity.negate(),buy.owner,quantity));
-                journal(c,quoteJournal,maker.quote,Map.of(buy.owner,cost.negate(),sell.owner,cost));
+                journal(c,baseJournal,maker.base,
+                        netOfFee(sell.owner,buy.owner,quantity,fees.buyerFeeBase()));
+                journal(c,quoteJournal,maker.quote,
+                        netOfFee(buy.owner,sell.owner,cost,fees.sellerFeeQuote()));
                 updateOrder(c,maker,quantity);
                 updateOrder(c,taker,quantity);
                 try(PreparedStatement p=c.prepareStatement(
                         "INSERT INTO paper_trades(id,maker_order_id,taker_order_id,base_asset,quote_asset," +
-                        "execution_price,quantity,buyer_account,seller_account) VALUES (?,?,?,?,?,?,?,?,?)")){
+                        "execution_price,quantity,buyer_account,seller_account,maker_fee_bps,taker_fee_bps," +
+                    "buyer_fee_base,seller_fee_quote) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)")){
                     p.setString(1,tradeId);p.setString(2,makerId);p.setString(3,takerId);
                     p.setString(4,maker.base);p.setString(5,maker.quote);
                     p.setBigDecimal(6,maker.price);p.setBigDecimal(7,quantity);
-                    p.setString(8,buy.owner);p.setString(9,sell.owner);p.executeUpdate();
+                    p.setString(8,buy.owner);p.setString(9,sell.owner);
+                    p.setInt(10,feePolicy.makerBps());p.setInt(11,feePolicy.takerBps());
+                    p.setBigDecimal(12,fees.buyerFeeBase());p.setBigDecimal(13,fees.sellerFeeQuote());
+                    p.executeUpdate();
                 }
                 c.commit();return true;
             }catch(SQLException|RuntimeException e){
