@@ -21,7 +21,7 @@ Round 010 adds Cancel All and guards stale cancellation handlers after reset. Si
 
 ## Browser QA
 ```bash
-npm install --no-save --no-package-lock playwright@1.56.0
+npm install --no-save --no-package-lock playwright@1.64.1
 npx playwright install --with-deps chromium
 node web/site-browser.test.cjs
 # Once a public, deployed PAPER site exists:
