@@ -65,3 +65,11 @@ Run `node web/site-smoke.test.cjs && node web/site-interaction.test.cjs` and rea
 - Given Cancel / Cancel All / Reset, the preview refreshes without duplicating credits. Repeated Cancel All and detached historical Cancel buttons must not restore more than originally reserved.
 - The preview is explicitly **browser-only**. No external calls, storage APIs, or claims of actual market quotes, real fills or persistence may appear.
 - Acceptance additionally requires green GitHub Site + Core CI, merged `main`, Vercel Production READY with exactly that `main` commit SHA, HTTP 200 and matching public HTML hash, and public desktop/mobile Chromium with screenshots. Otherwise the round remains Pending.
+
+## Round 013 — local paper history JSON export and negative BDD
+- Given no browser-session orders, when clicking **Export local demo history**, show an empty-state message and do not create/download a file.
+- Given a local BUY @64275 qty 1, when exporting, provide an offline `atlas-paper-session.json` file with `PAPER_BROWSER_ONLY`, `volatile_memory`, `synthetic=true`, `executions=0`, exact integer `priceCents=6427500`, `quantityMicroBTC=1000000`, `status=OPEN`; never claim server persistence or execution.
+- Given a canceled order, when exporting, it remains in the history with `CANCELED` (not a fabricated fill). Repeated cancellation cannot change funds or history.
+- Given reset, when exporting again, no previous orders can be downloaded; an earlier file remains a historical synthetic snapshot only.
+- Given corrupted/adversarial price or overprecision/exponent input, the order must be rejected before it enters the snapshot, no wallet/KYC/private-key fields exported and no cross-origin requests made.
+- Run `node web/site-smoke.test.cjs`, `node web/site-interaction.test.cjs`, `node web/site-browser.test.cjs` on desktop and 390px mobile. Require same-source public HTTPS validation, site/Core CI green and Vercel Production READY before Accepted.

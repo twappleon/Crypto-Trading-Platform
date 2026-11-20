@@ -34,7 +34,7 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#btc').textContent(), '2.000000');
       assert.ok((await page.locator('body').innerText()).includes('PAPER / SANDBOX'));
       assert.ok((await page.locator('body').innerText()).includes('Synthetic market data'));
-      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.5'));
+      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.6'));
       await page.locator('#price').fill('64275');
       await page.locator('#amount').fill('1');
       assert.match(await page.locator('#riskPreview').textContent(), /Hold: 64,275\.00 USDC/);
@@ -42,8 +42,19 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#count').textContent(), '1 open');
       assert.equal(await page.locator('#usdc').textContent(), '35,725.00');
       assert.equal(await page.locator('#usdcLocked').textContent(), 'Locked: 64,275.00');
+      const [exported] = await Promise.all([page.waitForEvent('download'), page.locator('#exportHistory').click()]);
+      assert.equal(exported.suggestedFilename(), 'atlas-paper-session.json');
+      const snapshot=JSON.parse(fs.readFileSync(await exported.path(),'utf8'));
+      assert.equal(snapshot.mode,'PAPER_BROWSER_ONLY');
+      assert.equal(snapshot.storage,'volatile_memory');
+      assert.equal(snapshot.executions,0);
+      assert.equal(snapshot.records[0].priceCents,6427500);
+      assert.equal(snapshot.records[0].quantityMicroBTC,1000000);
+      assert.equal(snapshot.records[0].status,'OPEN');
       const oldCancel = await page.locator('[data-id]').first().elementHandle();
       await page.locator('#reset').click();
+      await page.locator('#exportHistory').click();
+      assert.match(await page.locator('#message').textContent(), /No local demo history/);
       await page.locator('#amount').fill('1');
       await page.locator('#submit').click();
       await oldCancel.evaluate(node => node.click()); // detached DOM handler from previous reset
@@ -86,7 +97,7 @@ const { chromium } = require('playwright');
       const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       assert.ok(overflow <= 2, mode.name + ' should not horizontally overflow viewport: ' + overflow);
       await page.close();
-      console.log('PASS: real Chromium ' + mode.name + ' HTTP/browser PAPER order/cancel/reset/mobile E2E');
+      console.log('PASS: R013 offline JSON export + real Chromium ' + mode.name + ' PAPER order/cancel/reset/mobile E2E');
     }
   } finally {
     if (browser) await browser.close();
