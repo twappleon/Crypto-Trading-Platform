@@ -26,6 +26,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: paper-site-r010-desktop-mobile
+          name: paper-site-r011-desktop-mobile
           path: artifacts/*.png
           if-no-files-found: ignore
