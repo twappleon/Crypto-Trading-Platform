@@ -69,3 +69,15 @@ Execute standalone \`bash run-tests.sh\` and disposable PostgreSQL integration s
 - Given order PARTIAL, when owner cancels, only its remaining collateral is released. A subsequent attempted crossing fill rejects.
 - Given canceled/filled orders, no new fill; given original order quantity exceeded, no double spend.
 - Full regression: 23 JUnit cases, 0 failed/errors/skipped plus JDK standalone BDD, with PostgreSQL 16 in CI Run #93. Include original CI #90 red and corrected green #93 as evidence of negative-test correction.
+
+
+## Round 007 — deterministic fees, negative checks and conservation
+Standalone: `bash run-tests.sh` includes `PaperFeePolicyBDD` verifying maker/taker swap, 18-decimal floor, tiny-fee dust, invalid rates and nonrepresentable precision.
+
+Disposable PostgreSQL 16 `PaperFeeRound007Test`:
+- Given maker BUY at 11, taker SELL at 10, quantity 2, maker fee 10 bps and taker 25 bps, expect buyer net 1.998 BTC, seller net 21.945 USDC, fee-vault +0.002 BTC and +0.055 USDC, balanced journal conservation.
+- Given maker SELL at 10, taker BUY at 12, quantity 2, expect BUY 1.995 BTC, seller 19.98 USDC, fee-vault +0.005 BTC/+0.02 USDC and buyer limit-price spread released.
+- Given identical trade ID, pair, quantity and fee settings, exact replay changes no balances; changing fee rates under the same ID rejects without mutation.
+- Given no-fee legacy constructor or dust input, charged fee is zero and the original full gross recipient amount is preserved.
+- Given out-of-bounds rates, negative fill quantity, null maker side or excessive decimal scale, reject without funds mutation.
+- Every test uses synthetic balances, a disposable database and independent fee-vault balance snapshots to avoid execution-order dependence. Expected total regression after adding 5 tests: 28 JUnit tests. Required for acceptance: green SHA-matched GitHub Actions (standalone + PostgreSQL), 0 skipped/errors/failures.
