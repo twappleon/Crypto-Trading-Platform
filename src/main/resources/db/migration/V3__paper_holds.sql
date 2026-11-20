@@ -13,6 +13,7 @@ CREATE TABLE IF NOT EXISTS paper_ledger_holds (
         ((state = 'ACTIVE' AND released_at IS NULL)
           OR (state = 'RELEASED' AND released_at IS NOT NULL))
 );
+-- @statement
 CREATE INDEX IF NOT EXISTS idx_paper_ledger_active_holds
     ON paper_ledger_holds(asset, account_id)
     WHERE state = 'ACTIVE';
