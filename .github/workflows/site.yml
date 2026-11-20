@@ -1,9 +1,9 @@
 name: Paper Site Smoke
 on:
   push:
-    paths: ['web/**', '.github/workflows/site.yml']
+    paths: ['web/**', 'docs/PRD.md', 'docs/BDD.md', 'docs/PROGRESS.md', 'docs/SITE_RELEASE.md', '.github/workflows/site.yml']
   pull_request:
-    paths: ['web/**', '.github/workflows/site.yml']
+    paths: ['web/**', 'docs/PRD.md', 'docs/BDD.md', 'docs/PROGRESS.md', 'docs/SITE_RELEASE.md', '.github/workflows/site.yml']
 jobs:
   site-smoke:
     runs-on: ubuntu-latest
