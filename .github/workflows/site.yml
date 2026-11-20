@@ -13,4 +13,6 @@ jobs:
         with:
           node-version: '22'
       - name: Verify standalone paper-only demo
-        run: node web/site-smoke.test.cjs
+        run: |
+          node web/site-smoke.test.cjs
+          node web/site-interaction.test.cjs
