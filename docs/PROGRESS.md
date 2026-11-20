@@ -28,8 +28,8 @@ A round counts only for meaningful source changes and executable BDD/negative te
 005: Accepted durable order reservation + cancel/release (18/18 JUnit, CI Run #85 SUCCESS).
 006: Accepted explicit-pair maker-price atomic PAPER settlement, partial/final fills, and hold release (23/23 JUnit, CI #93).
 007: Accepted atomic maker/taker fees, deterministic 18-decimal floor, dedicated synthetic fee vault and receipt audit (28 JUnit PASS, Run #109).
-008: Accepted transactional outbox, lease/ack fencing, consumer inbox idempotency (33/33 JUnit, CI #126).\n009: Replay and recovery hardening (including durable FIFO matching and outbox publisher restart).
-009: Crash recovery/replay.
+008: Accepted transactional outbox, lease/ack fencing, consumer inbox idempotency (33/33 JUnit, CI #126).
+009: Replay and recovery hardening (including durable FIFO matching and outbox publisher restart).
 010: High-contention property/invariant tests.
 011+: Auth/MFA, KYC sandbox, APIs/WebSockets, admin, frontend, E2E and hardening.
 
