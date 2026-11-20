@@ -5,7 +5,8 @@ assert.ok(!/fetch\(|XMLHttpRequest|WebSocket\(|localStorage|sessionStorage/.test
 assert.ok(s.includes("orders=orders.filter"),'cancel must exist');
 assert.ok(s.includes("record.status='CANCELED'"),'cancel must persist visible session status');
 assert.ok(s.includes("history.push({id,side,price,qty,status:'OPEN'})"),'order history records must be created');
-assert.ok(s.includes('render();calc();'),'initial paint must exist');
+assert.ok(s.includes('render();'),'initial paint must exist');
+assert.ok(s.includes('calc(); // Re-evaluate browser-only hold preview after cancellation or reset.'),'preview must recompute after state changes');
 assert.ok(s.includes('quoteReserveCents'), 'integer-ceiling quote reservation must exist');
 assert.ok(s.includes('id="riskPreview"'), 'local-only reserve preview exists');
 assert.ok(s.includes('fmtUnits(reserve,2)'), 'synthetic quote preview is exact integer cents');
