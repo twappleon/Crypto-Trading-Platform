@@ -16,7 +16,7 @@ public final class PaperOrderService {
     public record Ticket(String id, String owner, String baseAsset, String quoteAsset,
                          ExchangeCore.Side side, BigDecimal price, BigDecimal quantity,
                          String holdId, String heldAsset, BigDecimal reserved,
-                         String state) {}
+                         String state, BigDecimal remaining) {}
     private final PostgresLedger.Connections connections;
 
     public PaperOrderService(PostgresLedger.Connections connections) {
@@ -51,7 +51,8 @@ public final class PaperOrderService {
                 ExchangeCore.Side.valueOf(r.getString("side")),
                 r.getBigDecimal("limit_price"), r.getBigDecimal("quantity"),
                 r.getString("hold_id"), r.getString("held_asset"),
-                r.getBigDecimal("reserved_amount"), r.getString("state"));
+                r.getBigDecimal("reserved_amount"), r.getString("state"),
+                r.getBigDecimal("remaining_quantity"));
     }
 
     private static Ticket read(Connection c, String id, boolean lock) throws SQLException {
@@ -124,7 +125,7 @@ public final class PaperOrderService {
                 try (PreparedStatement p = c.prepareStatement(
                         "INSERT INTO paper_limit_orders " +
                         "(id,account_id,base_asset,quote_asset,side,limit_price,quantity," +
-                        "hold_id,held_asset,reserved_amount) VALUES (?,?,?,?,?,?,?,?,?,?) " +
+                        "hold_id,held_asset,reserved_amount,remaining_quantity) VALUES (?,?,?,?,?,?,?,?,?,?,?) " +
                         "ON CONFLICT (id) DO NOTHING")) {
                     p.setString(1, id);
                     p.setString(2, owner);
@@ -136,6 +137,7 @@ public final class PaperOrderService {
                     p.setString(8, holdId(id));
                     p.setString(9, asset);
                     p.setBigDecimal(10, amount);
+                    p.setBigDecimal(11, quantity.stripTrailingZeros());
                     if (p.executeUpdate() != 1)
                         throw new IllegalArgumentException("order idempotency conflict");
                 }
@@ -167,7 +169,7 @@ public final class PaperOrderService {
                 if (current == null || !current.owner().equals(owner))
                     throw new IllegalArgumentException("unknown or unauthorized order");
                 if ("CANCELED".equals(current.state())) { c.rollback(); return false; }
-                if (!"OPEN".equals(current.state()))
+                if (!"OPEN".equals(current.state()) && !"PARTIAL".equals(current.state()))
                     throw new IllegalStateException("order cannot be canceled in state " + current.state());
                 try (PreparedStatement p = c.prepareStatement(
                         "UPDATE paper_ledger_holds SET state='RELEASED',released_at=now() " +
@@ -180,7 +182,7 @@ public final class PaperOrderService {
                 }
                 try (PreparedStatement p = c.prepareStatement(
                         "UPDATE paper_limit_orders SET state='CANCELED',canceled_at=now() " +
-                        "WHERE id=? AND state='OPEN'")) {
+                        "WHERE id=? AND state IN ('OPEN','PARTIAL')")) {
                     p.setString(1, id);
                     if (p.executeUpdate() != 1) throw new IllegalStateException("order state changed");
                 }
