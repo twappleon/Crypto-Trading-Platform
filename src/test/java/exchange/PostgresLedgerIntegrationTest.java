@@ -49,6 +49,12 @@ class PostgresLedgerIntegrationTest {
         assertFalse(ledger.transfer(prefix + "_move", alice, bob, "USDC", d("40")));
         balance(alice, "60");
         balance(bob, "40");
+        // A fresh object and connection must read committed balances after "restart".
+        PostgresLedger restarted = new PostgresLedger(
+            () -> DriverManager.getConnection(url, user, password));
+        assertEquals(0, restarted.balance(alice, "USDC").compareTo(d("60")));
+        assertFalse(restarted.transfer(prefix + "_move", alice, bob, "USDC", d("40")));
+        assertEquals(0, restarted.balance(bob, "USDC").compareTo(d("40")));
         assertThrows(IllegalArgumentException.class,
             () -> ledger.transfer(prefix + "_move", alice, bob, "USDC", d("39")));
         assertThrows(IllegalStateException.class,
