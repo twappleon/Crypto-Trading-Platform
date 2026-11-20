@@ -18,17 +18,22 @@ function element(id) {
   }
   return nodes.get(id);
 }
+let cachedMarkup = null;
+let cachedButtons = [];
 const document = {
   getElementById: element,
   querySelectorAll(selector) {
     assert.equal(selector, '[data-id]');
-    return [...element('orders').innerHTML.matchAll(/data-id="(\d+)"/g)]
+    if (cachedMarkup === element('orders').innerHTML) return cachedButtons;
+    cachedMarkup = element('orders').innerHTML;
+    cachedButtons = [...cachedMarkup.matchAll(/data-id="(\d+)"/g)]
       .map(m => {
         const x = { dataset: { id: m[1] }, listeners: {}, addEventListener(kind, fn) {
           (this.listeners[kind] ||= []).push(fn);
         }, click() { for (const fn of this.listeners.click || []) fn(); } };
         return x;
       });
+    return cachedButtons;
   }
 };
 element('price').value = '64275';
