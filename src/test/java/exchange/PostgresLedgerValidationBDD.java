@@ -22,7 +22,10 @@ public final class PostgresLedgerValidationBDD {
         rejects(() -> validate("x", "usdc", Map.of("alice", d("-1"), "bob", d("1"))), "noncanonical asset");
         rejects(() -> validate("x", "USDC", Map.of("alice';drop", d("-1"), "bob", d("1"))), "unsafe account");
         rejects(() -> validate("", "USDC", Map.of("alice", d("-1"), "bob", d("1"))), "invalid id");
-        rejects(() -> validate("x", "USDC", Map.of("alice", d("-1"), "bob", null)), "null entry");
+        var nullEntry = new java.util.HashMap<String, BigDecimal>();
+        nullEntry.put("alice", d("-1"));
+        nullEntry.put("bob", null);
+        rejects(() -> validate("x", "USDC", nullEntry), "null entry");
         System.out.println("PASS: SQL ledger validation and negative BDD");
     }
 }
