@@ -66,7 +66,7 @@ public final class ExchangeCore {
   private static String key(String account,String asset){return account+":"+asset;}
   public synchronized BigDecimal balance(String account,String asset){return balances.getOrDefault(key(account,asset),BigDecimal.ZERO);}
   public synchronized void post(String id,String asset,Map<String,BigDecimal> changes){
-   if(id==null||id.isBlank()||asset==null||asset.isBlank()||changes==null||changes.isEmpty()||changes.containsValue(null))
+   if(id==null||id.isBlank()||asset==null||asset.isBlank()||changes==null||changes.isEmpty()||changes.values().stream().anyMatch(Objects::isNull))
     throw new IllegalArgumentException("invalid journal");
    String fingerprint=asset+":"+new TreeMap<>(changes);
    if(posted.containsKey(id)){
