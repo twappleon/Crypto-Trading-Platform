@@ -1,7 +1,8 @@
 # 100-round verified development ledger
 
-## Current accounting (2026-11-20)
-**Submitted: 6** rounds. **Accepted: 5/100** (002, 003, 004, 005, 006). **Pending/failed: 1** (original 001).
+## Current accounting (2026-11-21)
+**Submitted: 7** rounds. **Accepted: 6/100** (002, 003, 004, 005, 006, 007). **Pending/failed: 1** (original 001).
+Round 007 source SHA CI is green; verify final documentation SHA via Actions separately.
 
 | Round | Actual source change | BDD & negative tests | GitHub CI | Source SHA | Accepted |
 |---|---|---|---|---|---|
@@ -13,6 +14,8 @@
 
 | 006 | V5 explicit-pair atomic PAPER fill: two balanced asset journals, maker-price execution, immutable trade receipts, partial/final order states and holds, partial cancellation | Standalone BDD PASS; PostgreSQL/JUnit **23/23 PASS** (5 new Round 006 tests), 0 failures/errors/skipped | [**SUCCESS — Run #93**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44774297393); initial Run #90 failed one wrong exception assertion, corrected | [7641e07](https://github.com/twappleon/Crypto-Trading-Platform/commit/7641e07b5955c5b0c1c80b291e6778764bf1cfdf) | **YES** |
 
+| 007 | Atomic PAPER maker/taker fee settlement: BigDecimal 18-decimal floor, fee-vault per-asset balanced journal, V6 immutable fee receipts and replay fee-rate conflict | Standalone Round 007 BDD PASS; PostgreSQL JUnit **28/28 PASS** including 5 fee tests; 0 failures/errors/skips | [**SUCCESS — Run #109**](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44784435281) | [16d7fbf](https://github.com/twappleon/Crypto-Trading-Platform/commit/16d7fbf7710d3978662e6c9526bb12005efe9eeb) | **YES** |
+
 [Round 002 report](ROUND_002_REPORT.md) · [Round 003 report](ROUND_003_REPORT.md) · [Round 004 report](ROUND_004_REPORT.md) · [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1)
 
 ## Accounting and safety
@@ -23,8 +26,8 @@ A round counts only for meaningful source changes and executable BDD/negative te
 004: Accepted available/locked balances and safe hold/release (13 JUnit PASS, Run #64 SUCCESS).
 005: Accepted durable order reservation + cancel/release (18/18 JUnit, CI Run #85 SUCCESS).
 006: Accepted explicit-pair maker-price atomic PAPER settlement, partial/final fills, and hold release (23/23 JUnit, CI #93).
-007: Decimal precision, fees and deterministic rounding.
-008: Transactional outbox.
+007: Accepted atomic maker/taker fees, deterministic 18-decimal floor, dedicated synthetic fee vault and receipt audit (28 JUnit PASS, Run #109).
+008: Transactional outbox, idempotent publish and crash-safe replay.
 009: Crash recovery/replay.
 010: High-contention property/invariant tests.
 011+: Auth/MFA, KYC sandbox, APIs/WebSockets, admin, frontend, E2E and hardening.
@@ -47,3 +50,11 @@ A round counts only for meaningful source changes and executable BDD/negative te
 - BDD: five new PostgreSQL tests; overall 23/23 tests + standalone BDD, zero failures/errors/skips. First [Run #90](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44773949539) was RED because uncrossed-order test wrongly expected canceled-state exception; corrected and separately tested both paths, then [Run #93](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44774297393) was GREEN.
 - [Round 006 report](ROUND_006_REPORT.md). Next P0 Round 007: price/quantity precision, fee calculation, deterministic rounding, explicit settlement event reconciliation, then persistent FIFO matcher and crash replay.
 - Limitation: explicit trusted maker/taker selection is required. No public trade API, no live funds or chain custody.
+
+## Round 007 submission (2026-11-21)
+**Submitted 7; Accepted 6/100** based on meaningful fee-settlement code SHA [16d7fbf](https://github.com/twappleon/Crypto-Trading-Platform/commit/16d7fbf7710d3978662e6c9526bb12005efe9eeb) and [GitHub Actions Run #109 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44784435281).
+- Code: 18-decimal fee rounding, maker/taker BPS validation, fee-vault balanced per-asset journal, V6 stored fee rates/charged amounts and fee-rate idempotency replay guard.
+- BDD: standalone negative scenarios plus 5 new PostgreSQL tests; **28/28 JUnit PASS**, zero failures/errors/skips. PostgreSQL 16 CI verifies order/hold/ledger regression.
+- [Round 007 report](ROUND_007_REPORT.md). Draft [PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1).
+- **Next 008:** transactional outbox for paper fills + idempotent replay; subsequently persistent FIFO sequencer, crash recovery and authoritative reconciliation.
+- Blockers: no matching sequencer, no real API/frontend, no production DB role isolation/security audit; PAPER only.
