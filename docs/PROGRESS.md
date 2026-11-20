@@ -1,27 +1,27 @@
 # 100-round verified development ledger
 
-## Current accounting
-Submitted rounds: **2/100** (001 on main; 002 on review branch).
-Accepted rounds: **0/100** until direct GitHub Actions SUCCESS evidence is captured.
-Do not count docs-only work, failed CI, or unverified tests. Pending is not a success.
+## Current accounting (2026-11-20)
+**Submitted: 2** rounds. **Accepted: 1/100** (002 only). **Pending/failed: 1** (original 001).
 
-| Round | Actual source changes | Standalone BDD | PostgreSQL BDD | GitHub Actions | Commit | Accepted |
-|---|---|---|---|---|---|---|
-| 001 | Java 21 order matching, self-trade precheck, in-memory journal + negative BDD | Not independently evidenced | N/A | No verified successful run | [dcef059](https://github.com/twappleon/Crypto-Trading-Platform/commit/dcef059d56e49003b66ecb4d47630d3b07148fad) | PENDING |
-| 002 | PostgreSQL ledger/schema, atomic double-entry SQL, idem, precision/negative safety, concurrent integration BDD | CI triggered by PR; result pending | CI triggered by PR; result pending | PENDING | [Round 002 PR](https://github.com/twappleon/Crypto-Trading-Platform/pulls) | PENDING |
+| Round | Actual source change | BDD & negative tests | GitHub CI | Source SHA | Accepted |
+|---|---|---|---|---|---|
+| 001 | Java 21 price/time matching + prototype in-memory journal | Original version failed standalone BDD due `Map.of.containsValue(null)` NPE; fixed during Round 002 | Original SHA has no green proof | [dcef059](https://github.com/twappleon/Crypto-Trading-Platform/commit/dcef059d56e49003b66ecb4d47630d3b07148fad) | **NO** |
+| 002 | Durable PostgreSQL journal, atomic balances, SQL migration, idempotency, collision/overdraft/precision handling, baseline bugfix, JUnit CI | Standalone BDD PASS; PostgreSQL 2 integration + 2 core JUnit tests; **4 passed, 0 failed/errors/skipped** | [**SUCCESS** — run #25](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44737212887) | [14fbf63](https://github.com/twappleon/Crypto-Trading-Platform/commit/14fbf632c4d1591d61c06b6a8c9161789d0bd5e9) | **YES** |
 
-## Operational rules
-Always read latest code, requirements, BDD, SHA and CI. One accepted round requires meaningful source change, executable tests, verifiable green CI, exact SHA and this ledger updated. A later PR green result may validate earlier source but do not retroactively count a round without precise evidence. Keep outstanding bugs visible.
+[Round 002 technical acceptance report](ROUND_002_REPORT.md) · [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1)
+
+## Accounting and safety
+A round counts only for meaningful source changes and executable BDD/negative tests, a verified GitHub Actions SUCCESS on an exact SHA and a committed progress entry. Rework on a failed round belongs to the actual round that fixes it, not automatic retroactive completion. GitHub tests use synthetic paper balances only. No real asset transfers, private keys, on-chain custody or production operations.
 
 ## Next P0 rounds
-003: robust PostgreSQL transaction retry classification and journal conservation check (no false accepted SQL failures).
-004: available vs locked balance model with atomic hold/release.
-005: limit-order reservation idempotency.
-006: trade settlement at maker price and holds release.
-007: fees and deterministic rounding.
-008: transactional event outbox.
-009: recovery/replay.
-010: concurrent matching and ledger invariant property tests.
-011+: secure API/authentication then integration and front-end.
+003: PostgreSQL DB-side journal conservation verification, classified retries and full rollback/invariant tests.
+004: Available vs locked balances with safe hold/release.
+005: Limit-order reservation idempotency.
+006: Maker-price atomic trade settlement and hold release.
+007: Decimal precision, fees and deterministic rounding.
+008: Transactional outbox.
+009: Crash recovery/replay.
+010: High-contention property/invariant tests.
+011+: Auth/MFA, KYC sandbox, APIs/WebSockets, admin, frontend, E2E and hardening.
 
-**Blocked:** external GitHub CI success is mandatory before Accepted count advances. Not a production-ready or real-asset platform.
+**Unresolved production gates:** matching + ledger are not transactionally coupled; no database-enforced balanced-journal deferrable constraint, deployment, legal/compliance or independent security review. Demo only.
