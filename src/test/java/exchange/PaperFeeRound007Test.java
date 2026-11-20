@@ -41,16 +41,18 @@ class PaperFeeRound007Test {
         ledger.creditForTest(id(),seller,"BTC",n("3"));
         orders.place(bid,buyer,"BTC","USDC",ExchangeCore.Side.BUY,n("11"),n("2"));
         orders.place(ask,seller,"BTC","USDC",ExchangeCore.Side.SELL,n("10"),n("2"));
+        BigDecimal baseBefore=ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC");
+        BigDecimal quoteBefore=ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"USDC");
         assertTrue(settlement.settle(trade,bid,ask,n("2")));
         eq("1.998",ledger.balance(buyer,"BTC"));
-        eq("0.002",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC"));
+        eq("0.002",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC").subtract(baseBefore));
         eq("21.945",ledger.balance(seller,"USDC"));
-        eq("0.055",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"USDC"));
+        eq("0.055",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"USDC").subtract(quoteBefore));
         eq("78",ledger.balance(buyer,"USDC"));
         eq("1",ledger.balance(seller,"BTC"));
         eq("0",holds.balance(buyer,"USDC").locked());
         assertFalse(settlement.settle(trade,bid,ask,n("2")));
-        eq("0.002",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC"));
+        eq("0.002",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC").subtract(baseBefore));
         assertTrue(ledger.verifyConservation());
         try(var c=open.open();var p=c.prepareStatement(
             "SELECT maker_fee_bps,taker_fee_bps,buyer_fee_base,seller_fee_quote FROM paper_trades WHERE id=?")){
@@ -68,11 +70,13 @@ class PaperFeeRound007Test {
         ledger.creditForTest(id(),seller,"BTC",n("2"));
         orders.place(ask,seller,"BTC","USDC",ExchangeCore.Side.SELL,n("10"),n("2"));
         orders.place(bid,buyer,"BTC","USDC",ExchangeCore.Side.BUY,n("12"),n("2"));
+        BigDecimal baseBefore=ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC");
+        BigDecimal quoteBefore=ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"USDC");
         assertTrue(settlement.settle(id(),ask,bid,n("2")));
         eq("1.995",ledger.balance(buyer,"BTC"));
         eq("19.98",ledger.balance(seller,"USDC"));
-        eq("0.005",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC").subtract(n("0.002")));
-        eq("0.02",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"USDC").subtract(n("0.055")));
+        eq("0.005",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"BTC").subtract(baseBefore));
+        eq("0.02",ledger.balance(PaperFeePolicy.FEE_ACCOUNT,"USDC").subtract(quoteBefore));
         eq("80",holds.balance(buyer,"USDC").available());
         assertTrue(ledger.verifyConservation());
     }
