@@ -34,3 +34,11 @@ CI: `.github/workflows/site.yml` must execute both tests on the `main` commit.
 - Static gate checks explicit synthetic/data warnings, responsive CSS, and absence of network or storage APIs.
 
 **External release gate:** Vercel Production READY, public HTTPS reachable without authentication, browser order/cancel/reset verified at desktop and mobile widths; until then this site milestone remains PENDING and does not count toward Accepted/100.
+
+## Round 010 — public terminal cancellation safety
+Run `node web/site-smoke.test.cjs` and `node web/site-interaction.test.cjs`.
+- Given an old cancel button for order #1, when resetting a browser session and submitting a new order, clicking that stale button must **not** cancel the new order or release its locked synthetic collateral. Browser-lifetime order IDs must not be recycled.
+- Given two open demo orders (one BUY and one SELL), when `Cancel all open demo orders` is clicked, then both open orders disappear, CANCELED history entries remain, and both synthetic asset reserves release exactly once.
+- Given no open orders, when `Cancel all` is repeated, then balances and order history remain unchanged.
+- Given `Reset`, the visible order history and balances clear but the in-memory next-order ID must remain unique for stale DOM event safety.
+- These Node VM checks are **not** proof of production browser interactions. External public HTTPS desktop/mobile browser E2E and a green GitHub CI are separately required for Accepted.
