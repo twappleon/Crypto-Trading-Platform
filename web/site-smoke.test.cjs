@@ -4,7 +4,7 @@ for(const x of ['PAPER / SANDBOX','Local browser simulation','Place Demo Order',
 assert.ok(!/fetch\(|XMLHttpRequest|WebSocket\(|localStorage|sessionStorage/.test(s),'site must not transmit or persist simulated money');
 assert.ok(s.includes("orders=orders.filter"),'cancel must exist');
 assert.ok(s.includes("record.status='CANCELED'"),'cancel must persist visible session status');
-assert.ok(s.includes("history.push({id,side,price:p,qty:q,status:'OPEN'})"),'order history records must be created');
+assert.ok(s.includes("history.push({id,side,price,qty,status:'OPEN'})"),'order history records must be created');
 assert.ok(s.includes('render();calc();'),'initial paint must exist');
 assert.ok(s.includes('quoteReserveCents'), 'integer-ceiling quote reservation must exist');
 assert.ok(s.includes('BigInt('), 'exact scaled math must back demo risk checks');
