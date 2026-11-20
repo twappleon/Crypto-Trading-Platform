@@ -40,7 +40,7 @@ function quoteReserveCents(priceCents,quantityMicro){return (priceCents*quantity
 // Exact integer formatting also handles impossible/oversized demo requests without float rounding.
 function fmtUnits(value,places){
  const s=value.toString().padStart(places+1,'0');
- return s.slice(0,-places).replace(/\\B(?=(\\d{3})+(?!\\d))/g,',')+'.'+s.slice(-places);
+ return s.slice(0,-places).replace(/\B(?=(\d{3})+(?!\d))/g,',')+'.'+s.slice(-places);
 }
 function calc(){
  const p=scaled($('price').value,2),q=scaled($('amount').value,6);
