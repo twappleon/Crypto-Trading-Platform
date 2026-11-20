@@ -34,16 +34,24 @@ public final class PostgresLedger {
 
     /** Only for controlled setup/migrations, not for each transaction. */
     public static void migrate(Connection c) throws SQLException {
-        String sql;
-        try (var stream = PostgresLedger.class.getResourceAsStream("/db/migration/V1__paper_ledger.sql")) {
-            if (stream == null) throw new IllegalStateException("paper ledger migration missing");
-            sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new IllegalStateException("cannot read ledger migration", e);
-        }
-        try (Statement statement = c.createStatement()) {
-            for (String part : sql.split(";")) {
-                if (!part.isBlank()) statement.execute(part);
+        // Disposable test-schema bootstrap. V2 uses explicit statement boundaries
+        // because PostgreSQL function bodies legitimately contain semicolons.
+        for (String path : java.util.List.of(
+                "/db/migration/V1__paper_ledger.sql",
+                "/db/migration/V2__paper_ledger_guards.sql")) {
+            String sql;
+            try (var stream = PostgresLedger.class.getResourceAsStream(path)) {
+                if (stream == null) throw new IllegalStateException("paper ledger migration missing: " + path);
+                sql = new String(stream.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new IllegalStateException("cannot read ledger migration", e);
+            }
+            try (Statement statement = c.createStatement()) {
+                String[] statements = path.contains("/V2__")
+                        ? sql.split("(?m)^-- @statement\\s*$") : sql.split(";");
+                for (String part : statements) {
+                    if (!part.isBlank()) statement.execute(part);
+                }
             }
         }
     }
@@ -138,7 +146,75 @@ public final class PostgresLedger {
                 throw e;
             }
         } catch (SQLException e) {
-            throw new IllegalStateException("paper ledger SQL transaction failed", e);
+            throw new SqlFailure(e);
+        }
+    }
+
+    /**
+     * Only SQLSTATE 40001 (serialization) and 40P01 (deadlock) are retried.
+     * The immutable journal ID is reused on each attempt. Uncertain commits,
+     * e.g. SQLSTATE 08006, fail closed rather than blindly replaying a debit.
+     */
+    public boolean postWithRetry(String id, String asset, Map<String, BigDecimal> changes, int maxAttempts) {
+        if (maxAttempts < 1 || maxAttempts > 5)
+            throw new IllegalArgumentException("maxAttempts must be 1..5");
+        for (int attempt = 1; ; attempt++) {
+            try {
+                return post(id, asset, changes);
+            } catch (SqlFailure e) {
+                if (!e.retryable() || attempt == maxAttempts) throw e;
+                try {
+                    Thread.sleep(10L * attempt);
+                } catch (InterruptedException interrupted) {
+                    Thread.currentThread().interrupt();
+                    throw new IllegalStateException("retry interrupted; outcome requires reconciliation", interrupted);
+                }
+            }
+        }
+    }
+
+    public static final class SqlFailure extends IllegalStateException {
+        private final String sqlState;
+        private SqlFailure(SQLException cause) {
+            super("paper ledger SQL transaction failed [SQLSTATE=" + cause.getSQLState() + "]", cause);
+            this.sqlState = cause.getSQLState();
+        }
+        public String sqlState() { return sqlState; }
+        public boolean retryable() { return retryableSqlState(sqlState); }
+    }
+
+    static boolean retryableSqlState(String sqlState) {
+        return "40001".equals(sqlState) || "40P01".equals(sqlState);
+    }
+
+    /**
+     * Read-only DB-side audit: detect empty/unbalanced journals OR balances
+     * that differ from the sum of immutable entries. This is not a repair API.
+     */
+    public boolean verifyConservation() {
+        String sql = """
+            SELECT
+              (SELECT COUNT(*) FROM paper_ledger_journals j
+               LEFT JOIN (
+                 SELECT journal_id, COUNT(*) AS n, SUM(delta) AS total
+                   FROM paper_ledger_entries GROUP BY journal_id
+               ) e ON e.journal_id = j.id
+               WHERE COALESCE(e.n, 0) < 2 OR COALESCE(e.total, 0) <> 0)
+              +
+              (SELECT COUNT(*) FROM paper_ledger_accounts a
+               LEFT JOIN (
+                 SELECT asset, account_id, SUM(delta) AS total
+                   FROM paper_ledger_entries GROUP BY asset, account_id
+               ) e ON e.asset = a.asset AND e.account_id = a.account_id
+               WHERE a.balance <> COALESCE(e.total, 0))
+            """;
+        try (Connection c = connections.open();
+             PreparedStatement p = c.prepareStatement(sql);
+             ResultSet r = p.executeQuery()) {
+            if (!r.next()) throw new IllegalStateException("conservation audit missing result");
+            return r.getLong(1) == 0L;
+        } catch (SQLException e) {
+            throw new SqlFailure(e);
         }
     }
 
