@@ -24,3 +24,7 @@ Despite the public URL and actual browser tests passing, **do not yet mark Round
 
 ## User safety
 Educational, locally simulated order intentions only, not a regulated exchange. Quotes, chart, depth and balances are fabricated. No real execution, order matching, deposits, withdrawals, wallets, private keys, external market API calls, real user KYC or persistent funds. Orders are only OPEN/CANCELED; reload loses session.
+
+## Round 011 production redeploy checkpoint (2026-11-21)
+The earlier 402 quota blocker cleared for new READY Production deployment [dpl_4ymvDQTGJyPiBc2X698SDWwCFZZ6](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/4ymvDQTGJyPiBc2X698SDWwCFZZ6): githubCommitRef=main, githubCommitSha=77b061928b7731cd08eda9dbfc6fe0f5b18cd453, target=production, alias crypto-trading-platform-demo.vercel.app. This resolves old feature-branch provenance for v0.3. Earlier 402 entries are historical, not current blocker evidence.
+R011 v0.4 introduces exact synthetic quote reserves. Do NOT count accepted or claim public v0.4 until its main SHA has green GitHub CI, READY Vercel production metadata matching the SHA, public HTTPS byte-for-byte source match, and desktop/mobile Chromium browser evidence.
