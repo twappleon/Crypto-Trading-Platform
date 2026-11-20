@@ -1,4 +1,4 @@
-# Crypto Trading Platform MVP — PRD v0.2
+# Crypto Trading Platform MVP — PRD v0.3
 
 ## Purpose and safety boundary
 Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPER funds only; no real trades, live capital, private-key storage, on-chain deposits/withdrawals or public financial operation. Licenses, custody, KYC contracts, third-party audit and incident response remain independent launch gates.
@@ -18,8 +18,15 @@ Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPE
 - All account rows locked in canonical sort order to avoid write-skew/most deadlocks.
 - Integration CI: PostgreSQL 16 service; JUnit tests for replay/idempotency, conservation, overdraft and concurrent debits.
 
+## Round 003 conservation and retry hardening
+- Additive V2 schema installs deferred PostgreSQL constraint triggers: commits reject newly inserted journals without at least two entries summing to zero. Entries and journal records reject SQL UPDATE/DELETE.
+- Read-only `verifyConservation()` detects per-account derived-balance drift and incomplete/unbalanced journals. It is a diagnostic operation, never auto-repairs financial data.
+- `postWithRetry(id, asset, entries, maxAttempts)` retries only SQLSTATE 40001 (serialization) and 40P01 (deadlock), bounded to 1–5 attempts using the exact same journal ID. Ambiguous commit failure (08006), constraint errors and overdrafts fail closed.
+- V2 disposable migration uses explicit `-- @statement` boundaries to keep PL/pgSQL semicolons within SQL function bodies; production requires a versioned migration tool and least-privilege DB roles.
+- Negative BDD includes direct SQL unbalanced insert rollback at COMMIT, forbidden rewrites/deletes, simulated transient SQLSTATE retry and uncertain-commit fail-closed behavior, and deliberate privileged balance drift detected/restored.
+
 ## Known P0 limitations
 - Journal application is still separate from exchange order matching: no holds/reservations or fill settlement.
-- No tamper-proof append-only DB enforcement, database-side sum=0 trigger, privileges, production migration governance, reconciliation task, retry policy or ledger rebuild/snapshot.
+- Database triggers defend ordinary writes but are not tamper-proof against database owners/superusers. No least-privilege DB roles, production migration governance, scheduled reconciliation/alerting, ledger rebuild/snapshot or end-to-end settlement coupling.
 - Round 002 is a paper-only proof, not evidence of production security.
 - Launch requires security review and legal/compliance sign-off.
