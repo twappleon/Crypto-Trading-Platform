@@ -1,11 +1,20 @@
-# Crypto Trading Platform
+# Crypto Trading Platform — PAPER / SANDBOX
 
-100-round development of a **paper-only** spot trading MVP.
+> **Release status: NOT LIVE.** The public Vercel production deployment is blocked by a Hobby-team daily deployment quota (HTTP 402, `api-deployments-free-per-day` as of 2026-11-21). This repository link is **not** a public working trading site. Do not send any cryptocurrency, keys or KYC documents.
 
-Architecture: Java 21 matching core, PostgreSQL transactional ledger (planned), Spring Boot REST/WebSocket (planned), Next.js (planned), KYC sandbox (planned).
+## Website-first P0
+The `main` branch contains the static responsive v0.2 paper trading terminal in [`web/index.html`](web/index.html): fabricated BTC/USDC chart/depth, simulated buy/sell limit orders, available/locked demo funds, cancellation/reset and session history displaying only **OPEN** and **CANCELED**. Reload clears the session. There are no fills, matching, live prices, persistent balances, external API calls or custody. The display is a local educational demonstration.
 
-**No live orders, external deposits, withdrawals, custody or keys are permitted.**
+```bash
+node web/site-smoke.test.cjs
+node web/site-interaction.test.cjs
+```
 
-Run: `bash run-tests.sh` (once core files are committed).
+[Website CI](https://github.com/twappleon/Crypto-Trading-Platform/actions/workflows/site.yml) · [Website deployment gate](docs/SITE_RELEASE.md) · [BDD scenarios](docs/BDD.md) · [PRD](docs/PRD.md) · [100-round progress](docs/PROGRESS.md)
 
-Each accepted round requires a source change, BDD execution, CI success, SHA, and updated `docs/PROGRESS.md`. See `docs/PRD.md`.
+Vercel project `crypto-trading-platform-demo` is linked to GitHub `main`, root `web`, no deployment authentication protection. **There is currently no READY deployment or verified HTTPS URL.** Site work cannot be accepted until CI on the exact SHA plus real public HTTP/browser/mobile E2E are confirmed.
+
+## Backend development (separate branch)
+The [backend feature branch](https://github.com/twappleon/Crypto-Trading-Platform/tree/feat/round-002-postgres-ledger-20261120) and [Draft PR #1](https://github.com/twappleon/Crypto-Trading-Platform/pull/1) contain a Java 21/PostgreSQL paper ledger, holds, order reservations, explicit-pair atomic settlement, maker/taker fee logic, and transactional outbox. R002–R008 have **7 Accepted / 100** recorded independent test/CI outcomes. These modules are not merged into the website, and are **not** production funds-safe. The website currently uses only local simulated state.
+
+Next P0: unblock Vercel production quota, deploy the latest `main`, prove public HTTPS and interactive desktop/mobile browser behavior. After that, integrate persistent sandbox backend with authentication, reconciliation, FIFO replay and safety gates. **No real trading, deposits, withdrawals, wallet keys or customer KYC.**
