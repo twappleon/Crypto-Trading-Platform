@@ -5,6 +5,7 @@ const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
 const script = html.match(/<script>\s*([\s\S]*?)<\/script>\s*<\/body>/);
 assert.ok(script, 'inline order-interaction script exists');
 const nodes = new Map();
+const downloads = [];
 function element(id) {
   if (!nodes.has(id)) {
     const x = {
@@ -22,6 +23,10 @@ let cachedMarkup = null;
 let cachedButtons = [];
 const document = {
   getElementById: element,
+  createElement(tag) {
+    assert.equal(tag,'a','only local export anchor can be created');
+    return {href:'',download:'',click(){downloads.push({href:this.href,filename:this.download})}};
+  },
   querySelectorAll(selector) {
     assert.equal(selector, '[data-id]');
     if (cachedMarkup === element('orders').innerHTML) return cachedButtons;
@@ -45,6 +50,9 @@ const markup = id => element(id).innerHTML;
 assert.equal(text('usdc'), '100,000.00');
 assert.equal(text('btc'), '2.000000');
 assert.match(markup('history'), /No orders/);
+click('exportHistory');
+assert.match(text('message'), /No local demo history/);
+assert.equal(downloads.length,0,'empty session never creates a file');
 // Given a synthetic balance, when placing a buy, its quote collateral must be unavailable.
 set('amount', '1'); click('submit');
 assert.equal(text('count'), '1 open');
@@ -64,6 +72,20 @@ assert.equal(text('usdc'), '100,000.00');
 assert.equal(text('usdcLocked'), 'Locked: 0.00');
 assert.equal(text('count'), '0 open');
 assert.match(markup('history'), /CANCELED/);
+click('exportHistory');
+assert.equal(downloads.length,1);
+assert.equal(downloads[0].filename,'atlas-paper-session.json');
+assert.ok(downloads[0].href.startsWith('data:application/json;charset=utf-8,'));
+const snapshot=JSON.parse(decodeURIComponent(downloads[0].href.split(',')[1]));
+assert.equal(snapshot.schema,'atlas-paper-history-v1');
+assert.equal(snapshot.storage,'volatile_memory');
+assert.equal(snapshot.synthetic,true);
+assert.equal(snapshot.executions,0);
+assert.equal(snapshot.records.length,1);
+assert.equal(snapshot.records[0].priceCents,6427500);
+assert.equal(snapshot.records[0].quantityMicroBTC,1000000);
+assert.equal(snapshot.records[0].status,'CANCELED');
+assert.ok(!('wallet' in snapshot)&&!('privateKey' in snapshot));
 staleCancel.click();
 assert.equal(text('usdc'), '100,000.00');
 assert.equal(text('count'), '0 open');
@@ -88,6 +110,9 @@ assert.equal(text('count'), '1 open');
 assert.equal((markup('history').match(/<tr>/g) || []).length, 2);
 // Given Reset, all synthetic funds and local session records reset.
 click('reset');
+click('exportHistory');
+assert.match(text('message'), /No local demo history/);
+assert.equal(downloads.length,1,'reset clears all exportable records');
 assert.equal(text('usdc'), '100,000.00');
 assert.equal(text('btc'), '2.000000');
 assert.equal(text('count'), '0 open');
@@ -153,6 +178,7 @@ set('amount', '2.000001');
 assert.match(text('riskPreview'), /Insufficient demo balance/, 'overselling BTC must be previewed honestly');
 set('amount', '1e-6');
 assert.match(text('riskPreview'), /Enter a valid positive/, 'exponent input must fail preview validation');
+console.log('PASS: 013 offline volatile JSON export, no empty export, exact scaled units and cleared reset');
 console.log('PASS: 012 exact pre-submit BUY/SELL hold previews, overbooking warning, invalid-input and cancel refresh');
 console.log('PASS: 011 integer-cent ceil, sub-cent reservation, overflow prevention and input precision');
 console.log('PASS: 010 stale cancel across reset, cancel-all reserve release, no duplicate mutation');
