@@ -26,7 +26,7 @@ Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPE
 - Negative BDD includes direct SQL unbalanced insert rollback at COMMIT, forbidden rewrites/deletes, simulated transient SQLSTATE retry and uncertain-commit fail-closed behavior, and deliberate privileged balance drift detected/restored.
 
 ## Known P0 limitations
-- Journal application is still separate from exchange order matching: no holds/reservations or fill settlement.
+- A PAPER settlement primitive now atomically couples two asset journals, order holds, and fill receipt when given an explicit maker/taker pair. Automated matching sequencer, price/time enforcement across competing orders, and crash replay are still absent.
 - Database triggers defend ordinary writes but are not tamper-proof against database owners/superusers. No least-privilege DB roles, production migration governance, scheduled reconciliation/alerting, ledger rebuild/snapshot or end-to-end settlement coupling.
 - Round 002 is a paper-only proof, not evidence of production security.
 - Launch requires security review and legal/compliance sign-off.
@@ -49,3 +49,13 @@ Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPE
 - `PaperOrderService.cancel()` checks ownership and atomically marks the OPEN order CANCELED and releases its ACTIVE collateral; repeated cancellation is a no-op. Direct public `PaperHoldService.reserve/release` cannot mutate `order:` hold IDs.
 - The untrusted public client must not be granted raw database access; service-level owner values must eventually derive from authenticated identity, not request bodies.
 - **Not yet implemented:** matching/cancel race arbitration under durable sequencer, partial fills, per-fill reserved amount reduction, atomic trades/settlement, fees, market orders, replay/reconciliation of orders. Order placement does not submit to `ExchangeCore.Book`. No real trading.
+
+
+## Round 006 — atomic explicit-pair PAPER settlement
+- V5 adds durable remaining quantity, PARTIAL/FILLED order states, immutable trade receipts, and validated lifecycle constraints. Historic V4 limit/quantity/reserved_amount intent remains immutable; active hold amount alone shrinks for remaining collateral.
+- \`PaperSettlementService.settle(tradeId,makerId,takerId,quantity)\` requires matching assets, opposite sides, crossing limits, distinct owners, positive bounded quantity, and active unfilled orders.
+- Maker order's limit price sets execution price. Buyer consumes exactly executed quote cost; seller consumes executed base quantity. Buyer receives base, seller receives quote in **two balanced journals in one transaction**; paper limit-price surplus is no longer locked.
+- Shared sorted account row locks precede sorted order locks, matching the order cancellation lock discipline. Fills and cancellation serialize and cannot both spend the same collateral. No swallowed uncertain commits; callers must reconcile failures.
+- On partial fill each hold equals limit-price * remaining for buy, or remaining base for sell; on full fill holds are RELEASED. Canceling PARTIAL releases only unfilled collateral. Each committed fill adds immutable \`paper_trades\` receipt; exact trade-id replay is read-only, intent changes reject.
+- Conservation: per-asset journal deltas sum to zero; account balances equal journal sum; account total never less than active holds. This is **not** a market price/time sequencer: a trusted upstream component must determine maker/taker, prevent unfair maker selection, and authorize calls; do not expose this service as a public endpoint.
+- Execution precision currently rejects nonrepresentable prices/costs rather than rounding; deterministic fee and rounding policy is Round 007. Production migration control, retry semantics for contention, failover/replay and security hardening remain open.

@@ -58,3 +58,14 @@ Run `bash run-tests.sh` and `POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/
 - Given a preexisting conflicting legacy hold ID, order insertion aborts and restores the exact prior available/locked balances.
 - Given 12 concurrent orders each requiring 10 USDC from 100, exactly 10 succeed and 2 fail. A full ledger conservation check passes after each scenario.
 - No fills/settlement may occur before Round 006; this gate checks *order reservation* only, not exchange readiness.
+
+
+## Round 006 — atomic explicit-pair settlement BDD
+Execute standalone \`bash run-tests.sh\` and disposable PostgreSQL integration suite \`REQUIRE_POSTGRES_TESTS=1 mvn -B -ntp test\`.
+- Given funded buyer 100 USDC and seller 5 BTC with crossing BUY @11 and SELL @10 quantity 3, when maker BUY settles 2 then 1, the execution price is 11, two balanced per-asset journals are written per trade, remaining=1 then 0, states PARTIAL then FILLED, holds shrink then release, ending buyer=67 USDC/3 BTC and seller=33 USDC/2 BTC.
+- Given maker SELL @10 and taker BUY limit @12 quantity 2, execution spends 20 USDC and releases all 24 USDC initially locked; buyer has 80 available after completion and seller receives 20.
+- Given exact repeated trade ID and same maker/taker/quantity, settlement returns false and does not duplicate balances. Given changed intent on the same ID, reject.
+- Given noncrossing prices, same order ID, negative quantity or a self-trade by one owner, reject without journal or hold changes.
+- Given order PARTIAL, when owner cancels, only its remaining collateral is released. A subsequent attempted crossing fill rejects.
+- Given canceled/filled orders, no new fill; given original order quantity exceeded, no double spend.
+- Full regression: 23 JUnit cases, 0 failed/errors/skipped plus JDK standalone BDD, with PostgreSQL 16 in CI Run #93. Include original CI #90 red and corrected green #93 as evidence of negative-test correction.

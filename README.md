@@ -35,3 +35,7 @@ A round is **Accepted** only when code changes are real, BDD and CI both succeed
 
 ## Round 005 — atomic paper limit-order collateral
 `PaperOrderService` now records limit-order intent in PostgreSQL using `V4__paper_orders.sql`. A BUY reserves its full quote-asset limit cost; a SELL reserves base quantity. `place` and `cancel` commit order state and hold changes together. No matching/fills/settlement occurs; `ExchangeCore.Book` remains an isolated demonstration. User credentials, wallets, external funding, trades with real money, and public order entry are not supported. See `docs/BDD.md` for negative and 12-way concurrent order tests.
+
+
+## Round 006 — explicit PAPER trade settlement (atomic)
+\`PaperSettlementService.settle(tradeId, makerId, takerId, quantity)\` performs a *single PostgreSQL transaction* spanning both per-asset balanced journals, buyer/seller balances, per-order collateral reduction/release, remaining quantities, and an append-only trade receipt. Maker-price execution, partial/final fills, buy-limit spread release, duplicate trade-id replay, self-trade rejection and cancel-after-partial-fill are covered by PostgreSQL tests. V5 expands order lifecycle to OPEN/PARTIAL/FILLED/CANCELED. **This is an internal explicit-pair primitive, not a matching engine sequencer**: the caller chooses maker/taker; FIFO, crossing arbitration under concurrent new orders, fee calculation, snapshot/replay and production controls are not yet implemented. Do not expose this prototype to real orders or funds.
