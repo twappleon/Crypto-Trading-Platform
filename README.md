@@ -24,7 +24,7 @@ mvn -B -ntp test
 
 Do not point this prototype at production credentials. `PostgresLedger.migrate` is a one-time disposable-schema helper, not a full production migration framework.
 
-**Important gaps:** no order-to-ledger reservation and settlement coupling, persistent matching engine, crash recovery, authentication, admin, true KYC provider integration, chain custody, deployment, or independent security review. Commit-time constraint triggers now reject empty/unbalanced new journals and disallow updates/deletes of entries and journal records. Privileged operators can still alter account balances directly: use `verifyConservation()` to detect drift. This remains a disposable proof, not a production hardened ledger. Never represent this as production funds-safe.
+**Important gaps:** no order-to-matching settlement coupling, persistent matching engine, crash recovery, authentication, admin, true KYC provider integration, chain custody, deployment, or independent security review. Commit-time constraint triggers now reject empty/unbalanced new journals and disallow updates/deletes of entries and journal records. Privileged operators can still alter account balances directly: use `verifyConservation()` to detect drift. This remains a disposable proof, not a production hardened ledger. Never represent this as production funds-safe.
 
 A round is **Accepted** only when code changes are real, BDD and CI both succeed, SHA is recorded, and [docs/PROGRESS.md](docs/PROGRESS.md) is updated. Failed and pending rounds do not count.
 
