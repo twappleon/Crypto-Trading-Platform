@@ -46,3 +46,15 @@ Run `POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/paper POSTGRES_USER=pape
 - Given 12 concurrent hold requests for 10 from 100 total, exactly 10 may succeed and 2 must fail. No negative available or total drift is permitted.
 - PostgreSQL CHECK constraints reject invalid negative hold rows. `verifyConservation()` remains true after successful scenarios.
 - Round 004 does not connect the matching engine. Round 005 must reserve per-order funds, then Round 006 must atomically settle fills and release unused collateral.
+
+
+## Round 005 — durable per-order hold BDD
+Run `bash run-tests.sh` and `POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/paper POSTGRES_USER=paper POSTGRES_PASSWORD=paper REQUIRE_POSTGRES_TESTS=1 mvn -B -ntp test`.
+- Given paper USDC/BTC balances, BUY at limit 12 quantity 2.5 reserves 30 USDC; SELL reserves 2.5 BTC. Orders and holds remain visible after reconstructing a service; journal totals remain unchanged.
+- Given identical order ID and mathematically equivalent prices/quantities, retries return false, never reserve twice. A reused ID with different owner/market/price/quantity rejects. A canceled ID cannot be revived.
+- Given an unauthorized actor, reading or canceling another account's order rejects. Repeated owner cancel is a no-op; first cancel releases collateral within the same transaction.
+- Given a reserved `order:` namespace, public hold reserve/release APIs reject attempts to mutate order collateral outside the order transaction.
+- Given insufficient balance, missing base asset, invalid quantity/price, fractional overprecision or same-asset pair, the request rejects without creating a ticket or hold.
+- Given a preexisting conflicting legacy hold ID, order insertion aborts and restores the exact prior available/locked balances.
+- Given 12 concurrent orders each requiring 10 USDC from 100, exactly 10 succeed and 2 fail. A full ledger conservation check passes after each scenario.
+- No fills/settlement may occur before Round 006; this gate checks *order reservation* only, not exchange readiness.
