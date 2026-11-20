@@ -58,6 +58,8 @@ public final class PaperHoldService {
     /** @return true on first reservation; false for an identical reused ID. */
     public boolean reserve(String id, String owner, String asset, BigDecimal amount) {
         requireId(id);
+        if (id.startsWith("order:"))
+            throw new IllegalArgumentException("order collateral may only be changed by PaperOrderService");
         requireOwner(owner);
         PostgresLedger.requireAsset(asset);
         PostgresLedger.requirePositiveAmount(amount);
@@ -142,6 +144,8 @@ public final class PaperHoldService {
     /** @return true if newly released, false if already released. A release never credits a journal. */
     public boolean release(String id, String owner, String asset) {
         requireId(id);
+        if (id.startsWith("order:"))
+            throw new IllegalArgumentException("order collateral may only be changed by PaperOrderService");
         requireOwner(owner);
         PostgresLedger.requireAsset(asset);
         try (Connection c = connections.open()) {
