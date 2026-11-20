@@ -3,7 +3,7 @@
 > **PAPER SITE IS PUBLICLY REACHABLE:** [Open the synthetic trading demo](https://crypto-trading-platform-demo.vercel.app/). GitHub Actions verified logged-out HTTPS 200, matching current `main/web/index.html` bytes, plus desktop/mobile Chromium order/cancel/reset E2E and screenshots on 2026-11-21. **Production provenance fixed for the previous website build:** Vercel Production deployment `dpl_4ymvDQTGJyPiBc2X698SDWwCFZZ6` is READY and records `main` SHA `77b061928b7731cd08eda9dbfc6fe0f5b18cd453`. Later site changes require a new exact-main SHA deploy and logged-out browser/CI validation before acceptance. This is NOT a real exchange. Never send cryptocurrency, keys or KYC documents.
 
 ## Website-first P0
-The `main` branch contains the static responsive v0.4 paper trading terminal in [`web/index.html`](web/index.html): fabricated BTC/USDC chart/depth, simulated buy/sell limit orders, available/locked demo funds, single/bulk cancellation, safe reset and session history displaying only **OPEN** and **CANCELED**. Reload clears the session. There are no fills, matching, live prices, persistent balances, external API calls or custody. The display is a local educational demonstration.
+The `main` branch contains the static responsive v0.5 paper trading terminal in [`web/index.html`](web/index.html): fabricated BTC/USDC chart/depth, simulated buy/sell limit orders, available/locked demo funds, single/bulk cancellation, safe reset and session history displaying only **OPEN** and **CANCELED**. Reload clears the session. There are no fills, matching, live prices, persistent balances, external API calls or custody. The display is a local educational demonstration.
 
 ```bash
 node web/site-smoke.test.cjs
@@ -31,3 +31,6 @@ The real Chromium check covers desktop and 390px mobile, captures screenshots as
 
 ## Round 011 — exact paper reserve precision
 The v0.4 local-only trading form stores BUY holds as integer USDC cents and SELL holds as integer 0.000001-BTC units. Price and quantity input are parsed into BigInt scaled units (not binary floats); BUY reservations always ceil to whole cents, including micro-size orders. The screenshot/real-browser BDD checks that 64275.01 × 0.000001 BTC holds **0.07 demo USDC**, and that a fully locked demo wallet cannot accept a sub-cent extra BUY. This is only synthetic collateral arithmetic, not a real exchange settlement system. See [Round 011 report](docs/ROUND_011_REPORT.md).
+
+## Round 012 — pre-submit local reserve transparency
+The v0.5 paper trading form now previews **exact** integer-scaled collateral and currently available synthetic funds for the selected BUY/SELL side before submission. It updates on input, side switch, submit, individual cancel, Cancel All and Reset. Unaffordable attempts show a visible insufficiency warning before submit; invalid/overprecision/exponent fields are not quoted. A large, rejected request is formatted without IEEE-754 loss. This preview is **browser-only**, not an exchange price quote or real deposit guarantee. Site/Chromium negative BDD and production SHA/HTTPS gates still apply. [Round 012](docs/ROUND_012_REPORT.md).
