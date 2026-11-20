@@ -22,3 +22,8 @@ Status: **SUBMITTED / NOT ACCEPTED**. Existing accepted backend rounds remain 7/
 - Vercel `crypto-trading-platform-demo` still showed `live=false`, zero deployments and no domain at run start. Previous production deploy was rejected with 402 daily deployment quota; retry on 2026-11-21 again returned HTTP 402 `api-deployments-free-per-day` with `retryAfter=86400`; team/project protection is off. No mapped CLI credential fallback was available. This is a transient quota, not code readiness.
 - Push tested changes through PR to `main` only after a green CI, then deploy `main:web` to Vercel Production, verify public HTTPS without authentication and perform desktop/mobile order/cancel/reset checks. Until all release gates pass, do not increment Accepted.
 - This is entirely local browser state; no PostgreSQL integration is claimed.
+
+## Browser E2E code added
+- `web/site-browser.test.cjs` now runs a **real headless Chromium** (not just VM) at desktop 1366×768 and iPhone-like 390×844. Checks include 200 response, safety labeling, synthetic buy/sell reserve, insufficient funds, stale detached cancel handler, Cancel All, repeated no-op, reload, external traffic, no horizontal overflow and screenshot capture.
+- `.github/workflows/site.yml` installs Playwright Chromium, runs test after Node VM BDD and uploads `artifacts/site-desktop.png`, `artifacts/site-mobile.png` as a GitHub Actions artifact. Public URL can be tested with `SITE_URL=https://... node web/site-browser.test.cjs` **only after HTTPS exists**.
+- CI status for this new browser E2E and screenshots must be verified before counting any tests as passed. Do not confuse locally hosted browser HTTP 200 with a public Vercel HTTPS check.
