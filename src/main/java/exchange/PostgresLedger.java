@@ -38,7 +38,8 @@ public final class PostgresLedger {
         // because PostgreSQL function bodies legitimately contain semicolons.
         for (String path : java.util.List.of(
                 "/db/migration/V1__paper_ledger.sql",
-                "/db/migration/V2__paper_ledger_guards.sql")) {
+                "/db/migration/V2__paper_ledger_guards.sql",
+                "/db/migration/V3__paper_holds.sql")) {
             String sql;
             try (var stream = PostgresLedger.class.getResourceAsStream(path)) {
                 if (stream == null) throw new IllegalStateException("paper ledger migration missing: " + path);
@@ -114,7 +115,10 @@ public final class PostgresLedger {
                         try (ResultSet r = p.executeQuery()) {
                             if (!r.next()) throw new IllegalStateException("locked account missing");
                             BigDecimal next = r.getBigDecimal(1).add(entry.getValue());
-                            if (!"treasury".equals(entry.getKey()) && next.signum() < 0)
+                            // Debits cannot spend active holds. Every hold mutation also
+                            // locks this account row before changing its reservation.
+                            if (!"treasury".equals(entry.getKey()) &&
+                                    next.compareTo(PaperHoldService.locked(c, entry.getKey(), asset)) < 0)
                                 throw new IllegalStateException("insufficient paper balance");
                         }
                     }
@@ -207,6 +211,14 @@ public final class PostgresLedger {
                    FROM paper_ledger_entries GROUP BY asset, account_id
                ) e ON e.asset = a.asset AND e.account_id = a.account_id
                WHERE a.balance <> COALESCE(e.total, 0))
+              +
+              (SELECT COUNT(*) FROM paper_ledger_accounts a
+               LEFT JOIN (
+                 SELECT asset, account_id, SUM(amount) AS held
+                   FROM paper_ledger_holds WHERE state = 'ACTIVE'
+                   GROUP BY asset, account_id
+               ) h ON h.asset = a.asset AND h.account_id = a.account_id
+               WHERE a.account_id <> 'treasury' AND a.balance < COALESCE(h.held, 0))
             """;
         try (Connection c = connections.open();
              PreparedStatement p = c.prepareStatement(sql);
@@ -286,15 +298,15 @@ public final class PostgresLedger {
         }
     }
 
-    private static void requireAccount(String account) {
+    static void requireAccount(String account) {
         if (account == null || !account.matches("[a-zA-Z0-9_-]{1,96}"))
             throw new IllegalArgumentException("invalid account");
     }
-    private static void requireAsset(String asset) {
+    static void requireAsset(String asset) {
         if (asset == null || !asset.matches("[A-Z0-9]{2,12}"))
             throw new IllegalArgumentException("invalid asset");
     }
-    private static void requirePositiveAmount(BigDecimal amount) {
+    static void requirePositiveAmount(BigDecimal amount) {
         checkAmount(amount);
         if (amount.signum() <= 0) throw new IllegalArgumentException("amount must be positive");
     }
