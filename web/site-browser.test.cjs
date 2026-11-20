@@ -34,7 +34,7 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#btc').textContent(), '2.000000');
       assert.ok((await page.locator('body').innerText()).includes('PAPER / SANDBOX'));
       assert.ok((await page.locator('body').innerText()).includes('Synthetic market data'));
-      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.3'));
+      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.4'));
       await page.locator('#price').fill('64275');
       await page.locator('#amount').fill('1');
       await page.locator('#submit').click();
@@ -64,6 +64,16 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#history tr').filter({ hasText: 'CANCELED' }).count(), 2);
       await page.locator('#cancelAll').click(); // repeated empty cancel is a no-op
       assert.equal(await page.locator('#history tr').filter({ hasText: 'CANCELED' }).count(), 2);
+      // R011: real desktop + 390px mobile guard against fractional-cent paper overbooking.
+      await page.locator('#buyTab').click();
+      await page.locator('#price').fill('64275.01');
+      await page.locator('#amount').fill('0.000001');
+      await page.locator('#submit').click();
+      assert.equal(await page.locator('#usdcLocked').textContent(), 'Locked: 0.07');
+      assert.equal(await page.locator('#usdc').textContent(), '99,999.93');
+      await page.locator('#cancelAll').click();
+      assert.equal(await page.locator('#usdcLocked').textContent(), 'Locked: 0.00');
+      assert.equal(await page.locator('#usdc').textContent(), '100,000.00');
       await page.screenshot({ path: 'artifacts/site-' + mode.name + '.png', fullPage: true });
       assert.deepEqual(crossOrigin, [], 'offline demo must not call third parties');
       await page.reload();
