@@ -144,7 +144,7 @@ public final class PaperSettlementService {
         TreeMap<String,BigDecimal> delta=PostgresLedger.validate(id,asset,changes);
         // Internal journals have immutable, unique trade-scoped IDs. Duplicate
         // trade IDs are checked separately; do not silently double-credit.
-        String fingerprint="trade-settlement-v1";
+        String fingerprint=PostgresLedger.fingerprint(asset,delta);
         try(PreparedStatement p=c.prepareStatement(
                 "INSERT INTO paper_ledger_journals(id,asset,fingerprint) VALUES (?,?,?)")){
             p.setString(1,id);p.setString(2,asset);p.setString(3,fingerprint);

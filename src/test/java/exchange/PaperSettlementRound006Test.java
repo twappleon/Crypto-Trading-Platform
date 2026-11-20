@@ -84,7 +84,7 @@ class PaperSettlementRound006Test {
         assertThrows(IllegalArgumentException.class,()->settlement.settle(id(),ask,bid,d("-1")));
         assertTrue(orders.cancel(ask,seller));
         assertThrows(IllegalArgumentException.class,()->settlement.settle(id(),ask,bid,d("3")));
-        assertThrows(IllegalStateException.class,()->settlement.settle(id(),ask,bid,d("1")));
+        assertThrows(IllegalArgumentException.class,()->settlement.settle(id(),ask,bid,d("1")));
         eq("100",ledger.balance(buyer,"USDC"));
         eq("3",ledger.balance(seller,"BTC"));
         eq("18",holds.balance(buyer,"USDC").locked());
@@ -110,6 +110,7 @@ class PaperSettlementRound006Test {
         assertTrue(settlement.settle(id(),ask,bid,d("1")));
         eq("15",holds.balance(buyer,"USDC").locked());
         assertTrue(orders.cancel(bid,buyer));
+        assertThrows(IllegalStateException.class,()->settlement.settle(id(),ask,bid,d("1")));
         eq("0",holds.balance(buyer,"USDC").locked());
         eq("36",holds.balance(buyer,"USDC").available());
         eq("1",orders.get(bid,buyer).remaining());

@@ -286,7 +286,7 @@ public final class PostgresLedger {
         return ordered;
     }
 
-    private static String fingerprint(String asset, TreeMap<String, BigDecimal> sorted) {
+    static String fingerprint(String asset, TreeMap<String, BigDecimal> sorted) {
         StringBuilder body = new StringBuilder(asset.length() + 20);
         body.append(asset.length()).append(':').append(asset);
         sorted.forEach((account, amount) -> body.append('|').append(account.length())
