@@ -43,3 +43,7 @@ A round is **Accepted** only when code changes are real, BDD and CI both succeed
 
 ## Round 007 — PAPER fee conservation (prototype)
 An immutable maker/taker basis-point schedule now deducts buyer fee from received BASE and seller fee from received QUOTE, accumulating synthetic fees in `paper_fee_vault`. All fee postings join existing two-asset balanced journals, order collateral updates and immutable trade receipts in one PostgreSQL transaction (V6). No live fee billing, custody, real trading or safe external API is enabled. Fee calculation uses deterministic 18-decimal floor and rejects unrepresentable trade costs. Run `bash run-tests.sh` and PostgreSQL/JUnit CI to verify.
+
+
+## Round 008 — transactional PAPER trade outbox
+V7 persists one event per settled trade in the SAME database commit as journals and order/hold changes. `PaperOutboxService` provides lease-token claim, acknowledgement and durable consumer receipt deduplication. Expired claims can be replayed without reposting balances. There is no external broker, WebSocket sender or real-money rail; this is **at-least-once event intent**, not external exactly-once delivery. The persistent FIFO matching sequencer remains a P0 gap. See `docs/ROUND_008_REPORT.md`.
