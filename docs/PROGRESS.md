@@ -27,3 +27,12 @@ A round counts only for meaningful source changes and executable BDD/negative te
 011+: Auth/MFA, KYC sandbox, APIs/WebSockets, admin, frontend, E2E and hardening.
 
 **Unresolved production gates:** matching + ledger are not transactionally coupled, holds are not order/settlement-coupled, database least-privilege policy is absent, and deployment, legal/compliance and independent security review remain incomplete. Demo only.
+
+
+## Round 005 submission (2026-11-20)
+**Submitted 5; Accepted remains 3/100 until exact-SHA GitHub Actions SUCCESS and re-verification.**
+- Feature: `PaperOrderService` + V4 persisted orders, atomic per-order collateral lock/release and reserved `order:` namespace; invalid amount/identity/collision fail closed.
+- BDD: 5 PostgreSQL integration cases (BUY/SELL reserve + durable lookup, immutable replay/cancel, negative/overdraft, hold collision rollback, 12-way concurrent orders).
+- Code commit: [261da8d](https://github.com/twappleon/Crypto-Trading-Platform/commit/261da8d367dfa46dc89bb15202290d78af75d6e6).
+- **Verification:** pending GitHub Actions at time of submission. Do NOT count as Accepted before confirmed CI green on updated code/docs.
+- [Round 005 report](ROUND_005_REPORT.md). Next P0 Round 006: matching engine + transactionally coupled partial-fill settlement, maker-price quote refunds, and cancellation race arbitration.
