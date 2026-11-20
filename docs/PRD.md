@@ -68,3 +68,11 @@ Demo a modular spot exchange MVP in 100 evidence-backed development rounds. PAPE
 - Each fill creates exactly two per-asset zero-sum journal groups (including fee-vault credits when nonzero) in the same PostgreSQL transaction as order states, holds and an immutable trade receipt. V6 records maker/taker rates and both charged fee amounts for reconciliation. Exact replay is idempotent only under the same fee schedule; changed rates reject.
 - Require representable NUMERIC(38,18) quantity and cost; fail closed rather than silently rounding down trade cost. Extremely small fees round to zero, explicitly documented as demo dust policy. Reject zero or negative net receipts.
 - Fee-vault is reserved from PAPER order creation, but no scoped service identity, production least-privilege DB roles, accounting tax treatment, configurable asset units or live fee schedule exists. This is a prototype, not a regulated revenue account.
+
+
+## Round 008 — PAPER transactional outbox and crash-safe at-least-once delivery
+- V7 creates one `paper_trade_outbox` row per immutable trade ID, FK-bound to `paper_trades`. `PaperSettlementService.settle()` writes the outbox intent **before the same commit** as both journals, holds, order updates and trade receipt. Failed settlements leave no event.
+- `PaperOutboxService.claimNext()/claim(tradeId)` lease an eligible event for 60 seconds using PostgreSQL `FOR UPDATE OF o SKIP LOCKED`, row-lock fencing and a fresh UUID token. A live lease is exclusive; abandoned/expired leases are eligible for re-claim after restart.
+- `acknowledge` only succeeds while the matching lease token remains current and unexpired. Delivered events never requeue; stale/wrong/duplicate acknowledgements cannot mark delivered.
+- `paper_trade_consumer_inbox` has unique (consumer_id,trade_id) receipts to demonstrate durable consumer deduplication. A future transport must commit any actual side effect and receipt in **one consumer-side transaction**. This prototype does not deliver to a real network or guarantee external exactly-once effects.
+- Explicit-pair settlement still lacks a persisted price/time FIFO matching sequencer. All balances and events remain synthetic; no customer assets, custody, live orders, chain transactions, or production credentials.
