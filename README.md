@@ -31,3 +31,7 @@ A round is **Accepted** only when code changes are real, BDD and CI both succeed
 
 ## Round 004 — available / locked PAPER balances
 `PaperHoldService` now persists account reservations in PostgreSQL (`V3__paper_holds.sql`): `reserve(id, owner, asset, amount)`, `release(id, owner, asset)`, and `balance(owner, asset)` returning total / locked / available. The account-row lock serializes hold changes with ledger debits. Double-entry journal history remains the source of total balances; holds are **not** new real-money credits. The order matching engine is not yet atomically coupled to reservations or settlement. Do not use these prototypes with real funds.
+
+
+## Round 005 — atomic paper limit-order collateral
+`PaperOrderService` now records limit-order intent in PostgreSQL using `V4__paper_orders.sql`. A BUY reserves its full quote-asset limit cost; a SELL reserves base quantity. `place` and `cancel` commit order state and hold changes together. No matching/fills/settlement occurs; `ExchangeCore.Book` remains an isolated demonstration. User credentials, wallets, external funding, trades with real money, and public order entry are not supported. See `docs/BDD.md` for negative and 12-way concurrent order tests.
