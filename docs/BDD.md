@@ -34,3 +34,15 @@ Given simulated SQLSTATE 40001 on the first two connection attempts, when the bo
 Given uncertain SQLSTATE 08006, when the helper posts, then it rejects without automatic retry. Bad maxAttempts also rejects.
 
 **Gate:** mark round Accepted only after CI green. Round 003 should address transactional failure/retry and DB-side conservation verification. Round 004 should add available/locked balances before connecting the matching engine.
+
+
+## Round 004 — PostgreSQL reserve/release / negative BDD
+Run `POSTGRES_JDBC_URL=jdbc:postgresql://localhost:5432/paper POSTGRES_USER=paper POSTGRES_PASSWORD=paper REQUIRE_POSTGRES_TESTS=1 mvn -B -ntp test`.
+- Given 100 USDC synthetic total and a 70 hold, expect total=100, locked=70, available=30 across restarted service connections.
+- Repeating identical hold ID, including after release, is a no-op; changed amount/account/asset is rejected.
+- Releasing as another owner or wrong asset is rejected; repeating a correct release is a no-op.
+- A hold that exceeds available funds, zero/too precise amount or a hold on treasury is rejected without mutation.
+- Given 100 total and 75 locked, attempting a transfer of 26 is rejected atomically; transferring 25 is allowed and leaves zero available. Releasing the hold restores available.
+- Given 12 concurrent hold requests for 10 from 100 total, exactly 10 may succeed and 2 must fail. No negative available or total drift is permitted.
+- PostgreSQL CHECK constraints reject invalid negative hold rows. `verifyConservation()` remains true after successful scenarios.
+- Round 004 does not connect the matching engine. Round 005 must reserve per-order funds, then Round 006 must atomically settle fills and release unused collateral.
