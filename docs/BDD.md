@@ -81,3 +81,14 @@ Disposable PostgreSQL 16 `PaperFeeRound007Test`:
 - Given no-fee legacy constructor or dust input, charged fee is zero and the original full gross recipient amount is preserved.
 - Given out-of-bounds rates, negative fill quantity, null maker side or excessive decimal scale, reject without funds mutation.
 - Every test uses synthetic balances, a disposable database and independent fee-vault balance snapshots to avoid execution-order dependence. Expected total regression after adding 5 tests: 28 JUnit tests. Required for acceptance: green SHA-matched GitHub Actions (standalone + PostgreSQL), 0 skipped/errors/failures.
+
+
+## Round 008 — transactional outbox and lease-fencing BDD
+Run `bash run-tests.sh` and the disposable PostgreSQL integration suite (`REQUIRE_POSTGRES_TESTS=1 mvn -B -ntp test`).
+- Given a successful PAPER settlement, when its trade ID is retried, then exactly one durable outbox row exists, with immutable trade payload fetched from `paper_trades`. Funds remain conserved after reconstruction.
+- Given an uncrossed invalid pair, when settlement rejects, then no trade or outbox row appears, and base/quote synthetic balances remain conserved. The DB foreign key rejects orphan outbox rows.
+- Given a live event, when a worker claims a 60s lease, then a second worker cannot claim it. Invalid/wrong tokens cannot acknowledge.
+- Given worker death or timeout, when an event lease expires, then the event is claimable with a NEW token; the old token is fenced, while successful acknowledgement makes future claims empty.
+- Given repeated consumer-side receipt attempts across restarted service objects, then the unique consumer+trade key permits one receipt only. Unknown trade IDs and malformed consumer IDs do not create receipts.
+- Given 8 concurrent workers claiming the same event, only one acquires the live lease. No events disappear on an unacknowledged crash.
+- These are outbox persistence and lease tests, **not** proof of exactly-once broker delivery or production-grade exchange behavior.
