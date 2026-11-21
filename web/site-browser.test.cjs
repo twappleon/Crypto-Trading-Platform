@@ -48,7 +48,7 @@ const { chromium } = require('playwright');
       const forbiddenPost = await page.request.post(apiUrl, { data: { amount: '100', privateKey: 'should-not-be-accepted' } });
       assert.equal(forbiddenPost.status(), 405, 'never accept unauthenticated paper order data');
       assert.ok((await page.locator('body').innerText()).includes('Synthetic market data'));
-      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.9'));
+      assert.ok((await page.locator('body').innerText()).includes('Prototype v1.0'));
       // R015: same-origin status button must be truthful, and fail closed when API is down.
       await page.locator('#checkApi').click();
       await page.waitForFunction(() => document.getElementById('apiCheckResult').textContent.includes('API reachable (NOT_READY)'));
