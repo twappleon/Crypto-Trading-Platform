@@ -106,3 +106,9 @@ Run `node web/site-smoke.test.cjs` and `node web/site-interaction.test.cjs`; Sit
 - Given a session export containing a manually simulated fill, it keeps `mode=PAPER_BROWSER_ONLY`, `storage=volatile_memory`, `executions=0` (no real executions) and `simulatedFills=1` with truthful status. Reset/reload erases it.
 - Never use orders from remote APIs, customer balances, a real execution venue, live pricing, wallets or KYC. The status GET remains NOT_READY, public write attempts 405. No authenticated PostgreSQL persistence has been added by this round.
 - R017 requires exact production source commit/READY, anonymous HTTPS 200 plus HTML hash and desktop/mobile public Chromium screenshot artifacts; otherwise **Pending**.
+
+## Round 018 — signed read-only PostgreSQL PAPER balance boundary (standalone negative BDD)
+Execute `node web/paper-balances.test.cjs` and include it in `site.yml`. Given a valid HMAC-SHA256 `v1` capability with permitted `paper:balances:read` scope, subject `alice` and expiry in the next hour, GET reads only `alice` from a parameterized `account_id=$1` SQL predicate with a repeatable-read read-only transaction. Exact total/locked/available decimal strings are returned; another valid subject cannot switch owner via URL/body. HEAD returns no body.
+- Missing/tampered/wrong-signature, wrong scope, stale/overlong expiry, malicious account IDs and treasury tokens must all be 401 with **zero database access**.
+- POST/PUT/PATCH/DELETE/OPTIONS must all be 405 before auth or DB access. Missing secret/database config is 503. Database failures and invalid negative numeric snapshots fail closed as generic 503 without reflecting secrets, SQL or request bodies.
+- No CORS or caches; users cannot mint tokens in browser. Testing injected mock data is **not** actual PostgreSQL integration or a deployed persistent service. Public read/write E2E and isolated PostgreSQL integration are mandatory before R018 Accepted.
