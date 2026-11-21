@@ -80,3 +80,7 @@ The server-only `/api/paper-holds` GET/HEAD boundary returns **read-only synthet
 
 ## R023 — atomic diagnostic PAPER snapshot (pending release)
 A read-only HMAC-scoped paper:snapshot:read API serves one PostgreSQL REPEATABLE READ snapshot of signed-owner BTC/USDC balances and reservations, rejects bad precision, truncated data and mismatch between active holds and locked funds. There is NO public token issuer or order-writing capability. The site remains browser-memory-only; the API may intentionally return 503 until an isolated PAPER database is configured. [Acceptance checkpoint](docs/ROUND_023_REPORT.md).
+
+
+## R024 candidate — disabled-by-default server-only PAPER reservation
+A guarded \`POST /api/paper-reserve\` handler can *only when deliberately enabled in an isolated PAPER test server* create synthetic PostgreSQL holds with account row locking and idempotency. It is not a customer order, fill, market execution or wallet. The route requires \`PAPER_RESERVATIONS_WRITE_ENABLED=sandbox-only\`, signed short-lived \`paper:reservations:write\` capability, synthetic \`paper_\` owner, strict exact-decimal JSON and rejects all browser-originated calls. The public site still operates solely in **volatile browser memory** with fake markets and funds; no public token issuance, real exchange, custody, KYC or real funds. See [BDD](docs/BDD.md), [R024 report](docs/ROUND_024_REPORT.md) and [progress](docs/PROGRESS.md). A GitHub commit alone is not Accepted.
