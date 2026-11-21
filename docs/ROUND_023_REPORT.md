@@ -1,6 +1,6 @@
 # Round 023 — atomic signed PAPER wallet snapshot (2026-11-21)
 
-## Pending: not counted
+## Original Pending checkpoint (superseded by final acceptance)
 Submitted 23; Accepted 21/100; Failed R001; Pending R023. Code does not count until all independent release gates pass.
 
 ## Actual implementation
@@ -26,3 +26,7 @@ Progress: https://github.com/twappleon/Crypto-Trading-Platform/blob/main/docs/PR
 - [Public HTTPS/API/browser release workflow #44890036998 FAILED](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44890036998): public HTML HTTP 200 and SHA-256 matches source, old diagnostic/balance/holds API negative gates passed; newly added /api/paper-snapshot returned HTTP 404 because Production alias still points to R022 feature SHA 499bfa77. Public Chromium portion was skipped and no public screenshot was generated.
 - A deliberate new Vercel Production deployment of main d1130d53 returned HTTP 402, code api-deployments-free-per-day, retryAfter=86400. The [last READY Production deployment](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/3JWMZNBCEACnEJEBZmiwpn3vF5JN) remains R022 SHA 499bfa77, not R023. No billing changes made.
 - **Final decision: R023 PENDING, NOT Accepted**. Accepted remains 21/100; Submitted 23; R001 Failed; R023 Pending. After quota clears, require exact main feature SHA d1130d53 READY, anonymous /api/paper-snapshot GET 401/503 and POST 405, successful rerun of Public Release Gate with real desktop/mobile Chromium screenshots before incrementing Accepted. Existing public site still v1.0 BROWSER MEMORY ONLY.
+
+
+## Final acceptance — 2026-11-21
+R023 is **ACCEPTED** only after exact-source [d1130d53 Vercel Production READY](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/m5qp8rr8nSFAHHDwFhXeqph9MrEm), [merged-main Site+real PostgreSQL16+local Chromium SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44890036990), [Core BDD SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44890037007), [public HTTPS/anonymous snapshot API negative/desktop+mobile Chromium E2E attempt 2 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44890036998/attempts/2) and [public screenshot artifact 14703173072](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44890036998/artifacts/14703173072). Attempt 1 failed before Vercel propagation and does not count. No public persistent orders or real trading.
