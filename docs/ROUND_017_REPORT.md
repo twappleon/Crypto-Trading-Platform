@@ -20,3 +20,10 @@ If any check fails, R017 remains Submitted/Pending. Never add another Accepted t
 
 ## Safety
 All data fabricated. Manual "Simulate fill" is NOT real execution, matching or financial settlement. No live pricing, funds, KYC records, keys, custody or blockchain activity.
+
+## GitHub merge, CI and Production disposition — 2026-11-21
+- [PR #9](https://github.com/twappleon/Crypto-Trading-Platform/pull/9) merged to main at [bc63bff0a3126472943e3378a9ab95ba419af433](https://github.com/twappleon/Crypto-Trading-Platform/commit/bc63bff0a3126472943e3378a9ab95ba419af433).
+- Feature SHA `e4a8760683eb685b2a647440ce63dfe90720ed02` [GitHub Site/Chromium run #44861051909 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44861051909), [Core BDD #44861051917 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44861051917). Main-merge SHA workflow result not independently confirmed in this execution.
+- Attempted production POST with project `prj_JESXfEsbUcjI6dA6Yoe3VfcV8iPf`, GitHub `main`, exact source `bc63bff`; Vercel returned **HTTP 402** `api-deployments-free-per-day`, `retryAfter=86400`. No change to billing/plan. Vercel CLI not installed in this environment; no authorized credentialed fallback.
+- Last confirmed Production READY still [dpl_BFawDRtmb6EDnuaDp4Biu4ZVBN2x](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/BFawDRtmb6EDnuaDp4Biu4ZVBN2x) (`main` SHA `e617f686`, public v0.8). **v0.9 not independently published, live HTTP/browser checks of v0.9 not run.**
+- **R017 status PENDING; Accepted stays 14/100; Submitted 17; Failed R001; R016 also Pending.** Release proof checklist above remains unchecked for Vercel READY and public site. Site functionality is still nonpersistent/unauthenticated; paper synthetic fills do not indicate real trades.
