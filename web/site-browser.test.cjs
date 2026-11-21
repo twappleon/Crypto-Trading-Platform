@@ -11,6 +11,7 @@ const { chromium } = require('playwright');
   if (!site) {
     const html = fs.readFileSync(path.join(__dirname, 'index.html'));
     server = http.createServer((req, res) => {
+      if (req.url === '/api/paper-status') return require('./api/paper-status.js')(req, res);
       if (req.url !== '/' && req.url !== '/index.html') {
         res.writeHead(404); res.end('Not found'); return;
       }
@@ -33,8 +34,21 @@ const { chromium } = require('playwright');
       assert.equal(await page.locator('#usdc').textContent(), '100,000.00');
       assert.equal(await page.locator('#btc').textContent(), '2.000000');
       assert.ok((await page.locator('body').innerText()).includes('PAPER / SANDBOX'));
+      assert.match(await page.locator('#persistenceBadge').textContent(), /BROWSER MEMORY ONLY/);
+      assert.equal(await page.locator('#apiStatusLink').getAttribute('href'), '/api/paper-status');
+      const apiUrl = new URL('/api/paper-status', site).href;
+      const apiResponse = await page.request.get(apiUrl);
+      assert.equal(apiResponse.status(), 200, 'read-only paper API diagnostic must be available');
+      const paperStatus = await apiResponse.json();
+      assert.equal(paperStatus.mode, 'PAPER_SANDBOX');
+      assert.equal(paperStatus.readiness, 'NOT_READY');
+      assert.equal(paperStatus.orderEntryEnabled, false);
+      assert.equal(paperStatus.durablePostgresConnected, false);
+      assert.equal(paperStatus.publicAuthenticatedApi, false);
+      const forbiddenPost = await page.request.post(apiUrl, { data: { amount: '100', privateKey: 'should-not-be-accepted' } });
+      assert.equal(forbiddenPost.status(), 405, 'never accept unauthenticated paper order data');
       assert.ok((await page.locator('body').innerText()).includes('Synthetic market data'));
-      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.6'));
+      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.7'));
       await page.locator('#price').fill('64275');
       await page.locator('#amount').fill('1');
       assert.match(await page.locator('#riskPreview').textContent(), /Hold: 64,275\.00 USDC/);
