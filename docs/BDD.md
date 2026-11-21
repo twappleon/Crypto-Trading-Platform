@@ -121,3 +121,13 @@ Deploy main and run `node qa/paper-balances.public.test.cjs`: HTTPS anonymous GE
 Given a signed, owner-scoped read-only paper capability, when the isolated PostgreSQL returns a complete BTC+USDC snapshot whose decimal total equals locked plus available in exact NUMERIC(38,18) units, then the endpoint returns 200 with only the allowlisted balance fields.
 Given missing, duplicate, negative, over-precise, overflow, or mathematically inconsistent asset rows, when the API reads the snapshot, then it returns 503 PAPER_BALANCES_UNAVAILABLE without leaking data or claiming readiness.
 Given production credentials are absent, unauthenticated requests or write methods are rejected without touching a real account or external exchange. The disposable PostgreSQL test MUST also corrupt an ACTIVE hold beyond the total and remove a BTC asset row for one user, observe 503 without data leakage, and verify restoration returns 200. Execute: node web/paper-balance-invariants.test.cjs; node web/paper-balances.test.cjs; node qa/paper-balances.pg.test.cjs (disposable CI PostgreSQL 16). Require Site+Core CI, exact SHA Vercel READY, public HTTPS and desktop/mobile Chromium before Accepted.
+
+## R020 — durable PAPER hold / cancel negative BDD (server-only)
+Run `node web/paper-reservations.test.cjs` for no-DB negative input cases. In isolated PostgreSQL 16 CI (after `qa/paper-balances.pg.test.cjs`) run `node qa/paper-reservations.pg.test.cjs`.
+- Given Alice has 100 synthetic USDC, when reserving 30 with idempotency ID A, then locked is 30 and available 70 across separate transactions and the existing signed READ API.
+- Given the same ID/owner/asset and semantically equal 30.00, when retried, no second hold is created; amount/owner mismatch is rejected. A canceled ID cannot be resurrected by retry.
+- Given two PostgreSQL connections racing to reserve 50 each when only 70 remain, exactly one succeeds and available remains nonnegative; Bob's account remains unchanged.
+- Given Bob tries to cancel Alice's ID, reject without mutation; Alice cancel releases exactly once and repeated cancel is idempotent.
+- Given crash simulation via a rolled-back uncommitted hold, a new transaction sees no phantom hold.
+- Given negative, exponential, wrong precision, zero, treasury owner, or invalid IDs, reject **before any database operation**.
+- Do not expose write API, token issuance, persistent website order status, settlement, real funds, on-chain transfers or KYC. Production public site v1.0 must continue to display BROWSER MEMORY ONLY until genuinely connected. Require CI + Production SHA + HTTPS/mobile Chromium + screenshots before Accepted.

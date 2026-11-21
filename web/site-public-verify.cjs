@@ -14,7 +14,7 @@ const url = process.env.SITE_URL || 'https://crypto-trading-platform-demo.vercel
   console.log('FINAL_URL=' + response.url);
   assert.equal(response.status, 200, 'production must serve HTTP 200 without login');
   const published = await response.text();
-  for (const term of ['PAPER / SANDBOX', 'Synthetic market data', 'Cancel all open demo orders', 'Prototype v0.9', 'no real executions']) {
+  for (const term of ['PAPER / SANDBOX', 'Synthetic market data', 'Cancel all open demo orders', 'Prototype v1.0', 'no real executions']) {
     assert.ok(published.includes(term), 'public site is missing release marker: ' + term);
   }
   const local = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
@@ -34,6 +34,6 @@ const url = process.env.SITE_URL || 'https://crypto-trading-platform-demo.vercel
   assert.equal(diagnostics.orderEntryEnabled,false);
   const denied=await fetch(api,{method:'POST',body:JSON.stringify({order:'forbidden'}),headers:{'Content-Type':'application/json'},signal:AbortSignal.timeout(20000)});
   assert.equal(denied.status,405,'public status endpoint must reject order submissions');
-  console.log('PASS: public HTTPS exact v0.9 HTML, API GET NOT_READY and POST 405; no real trades');
+  console.log('PASS: public HTTPS exact v1.0 HTML, API GET NOT_READY and POST 405; no real trades');
 
 })().catch(e => { console.error('PUBLIC RELEASE GATE FAILED:', e); process.exitCode = 1; });
