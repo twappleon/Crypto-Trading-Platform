@@ -42,3 +42,7 @@ The next website update adds a local JSON export of synthetic OPEN/CANCELED sess
 
 ## Round 014 — paper API readiness boundary (v0.7 candidate)
 Website displays **BROWSER MEMORY ONLY** and links to read-only `/api/paper-status`. Fixed GET/HEAD JSON returns `readiness=NOT_READY`, `durablePostgresConnected=false`, and `orderEntryEnabled=false`. Write methods 405; no orders, funds, private keys, identities or KYC are accepted, and no page state is sent to the endpoint. A functioning status endpoint is NOT PostgreSQL persistence or auth. R014 is pending GitHub CI and an exact-main Vercel Production/HTTPS/desktop+mobile browser release gate. [R014 report](docs/ROUND_014_REPORT.md).
+
+
+## Round 015 — visible fail-closed PAPER API diagnostics (submitted 2026-11-21)
+The browser terminal v0.8 adds an explicit user-triggered same-origin, credential-free **GET** to \`/api/paper-status\` to diagnose rollout of the read-only Vercel function. It never enables server-side orders or persists balances. It treats a missing endpoint, invalid content-type, unexpected READY/capabilities, failed response, and out-of-order stale status as **unverified**. New hostile-response VM BDD, desktop/mobile Chromium, and public API GET 200/POST 405 release assertions are mandatory. Until exact-main Vercel Production + public Chromium + green CI, **R015 is Pending**. R014 also remains Pending. No real funds, private keys or real KYC.
