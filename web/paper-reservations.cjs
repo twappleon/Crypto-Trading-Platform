@@ -47,16 +47,17 @@ async function reservePaperHold(client,{id,owner,asset,amount}){
  checkId(id,true);checkId(owner);
  const requested=normalizeAmount(asset,amount);
  return transaction(client,async()=>{
-  // Fast replay is read-only; in-flight same-account inserts are checked again after row lock.
+  // A concurrent cancellation may be uncommitted when the first replay read sees
+  // ACTIVE. Serialize *all* replays against the same owner/asset account lock,
+  // then read again under READ COMMITTED before returning the durable state.
   const prior=await getHold(client,id);
-  if(prior){
-   if(!compareHold(prior,owner,asset,requested))throw fail('IDEMPOTENCY_CONFLICT');
-   return {id,asset,state:prior.state,replayed:true};
-  }
+  if(prior&&!compareHold(prior,owner,asset,requested))throw fail('IDEMPOTENCY_CONFLICT');
   const total=await accountLock(client,owner,asset);
   const afterLock=await getHold(client,id);
+  if(prior&&!afterLock)throw fail('IDEMPOTENCY_CONFLICT'); // Never resurrect a vanished ID.
   if(afterLock){
    if(!compareHold(afterLock,owner,asset,requested))throw fail('IDEMPOTENCY_CONFLICT');
+   if(afterLock.state!=='ACTIVE'&&afterLock.state!=='RELEASED')throw fail('BAD_HOLD_STATE');
    return {id,asset,state:afterLock.state,replayed:true};
   }
   const lockedResult=await client.query("SELECT COALESCE(SUM(amount),0)::text AS locked FROM paper_ledger_holds WHERE account_id=$1 AND asset=$2 AND state='ACTIVE'",[owner,asset]);
