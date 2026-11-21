@@ -1,6 +1,6 @@
 # Round 017 — Manual synthetic PAPER fill (browser-only)
 Date: 2026-11-21
-Status: Submitted / PENDING production and CI evidence
+Status: Submitted; feature-branch CI PASSED; Production PENDING
 
 ## Independent source
 - `web/index.html`: manual Simulate fill for open local BUY and SELL orders, integer-cent/microBTC quantity settlement; history SIMULATED_FILLED; local JSON export separately counts simulatedFills while real executions remain zero. No matching, external orders, customer accounts or PostgreSQL.
