@@ -73,3 +73,10 @@ Run `node web/site-smoke.test.cjs && node web/site-interaction.test.cjs` and rea
 - Given reset, when exporting again, no previous orders can be downloaded; an earlier file remains a historical synthetic snapshot only.
 - Given corrupted/adversarial price or overprecision/exponent input, the order must be rejected before it enters the snapshot, no wallet/KYC/private-key fields exported and no cross-origin requests made.
 - Run `node web/site-smoke.test.cjs`, `node web/site-interaction.test.cjs`, `node web/site-browser.test.cjs` on desktop and 390px mobile. Require same-source public HTTPS validation, site/Core CI green and Vercel Production READY before Accepted.
+
+## Round 014 — API readiness + negative mutation BDD
+Run `node web/paper-status.test.cjs`, `node web/site-smoke.test.cjs`, `node web/site-interaction.test.cjs`, desktop/mobile `node web/site-browser.test.cjs` and exact deployed `node web/site-public-verify.cjs` + `SITE_URL=https://crypto-trading-platform-demo.vercel.app/ node web/site-browser.test.cjs`.
+- GET paper-status = 200 no-store JSON, mode PAPER_SANDBOX, readiness NOT_READY, durablePostgresConnected false, publicAuthenticatedApi false, orderEntryEnabled false, synthetic true; never reflects cookies, credentials, private keys, request body or query string.
+- HEAD body empty; POST, PUT, PATCH, DELETE and OPTIONS with hostile order/funds/keys bodies all 405 without mutation or cross-origin permission.
+- Website explicitly shows BROWSER MEMORY ONLY and same-origin JSON status link. It continues performing all order operations in volatile JS, without sending funds to the API.
+- Real desktop 1366px + mobile 390px browser must verify GET/POST safety, session trade/cancel/reset/JSON export, no outside traffic, no overflow, screenshotted public HTTPS. Production must be READY at exact main SHA and HTML hash; otherwise R014 Pending.
