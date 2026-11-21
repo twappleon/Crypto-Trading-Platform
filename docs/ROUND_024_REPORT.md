@@ -1,6 +1,6 @@
 # Round 024 — opt-in synthetic PostgreSQL PAPER reservation (2026-11-21)
 
-## PENDING — not counted
+## Original pre-release checkpoint (superseded by final acceptance)
 Submitted 24; Accepted 21/100; Failed R001; Pending R023/R024. Program changes and isolated tests alone do not satisfy production/browser acceptance.
 
 ## Implementation
@@ -21,3 +21,9 @@ Submitted 24; Accepted 21/100; Failed R001; Pending R023/R024. Program changes a
 
 Production demo: https://crypto-trading-platform-demo.vercel.app/
 Progress: https://github.com/twappleon/Crypto-Trading-Platform/blob/main/docs/PROGRESS.md
+
+
+## Final acceptance — 2026-11-21
+R024 is **ACCEPTED** after [PR #17 merged](https://github.com/twappleon/Crypto-Trading-Platform/pull/17) into [main 6a3b488d](https://github.com/twappleon/Crypto-Trading-Platform/commit/6a3b488d18944c30171940f9895e94d3435a3c6c), [branch Site/real PG16/local Chromium SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894356616), [branch Core SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894356608), [main Site+PG16+desktop/mobile Chromium SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894499364), [main Core BDD SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894499263), [Vercel GitHub main automatic Production READY exact SHA](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/3dzWoXSydWa246UNnmtWL3kgrMW3), and [public HTTPS/anonymous write denial/real desktop-mobile Chromium E2E run #44894499351 attempt 2 SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894499351/attempts/2) with [public screenshot artifact 14703248148](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894499351/artifacts/14703248148). Attempt 1 failed while the public alias still pointed at the previous deployment and was not counted. Public PAPER API remains disabled/unconfigured 503; GET is 405; no browser persistent orders, funds or actual trades.
+
+Combined totals: **Submitted 24 · Accepted 23/100 · Failed R001 · Pending 0**. R023 retroactively accepted independently; no extra round awarded for docs.
