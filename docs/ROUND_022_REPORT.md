@@ -1,7 +1,7 @@
 # Round 022 — isolated read-only PAPER hold inspection (2026-11-21)
 
-## Decision: Pending (submitted, not accepted)
-Submitted 22; Accepted currently 19/100, Failed R001, Pending R016 and R022.
+## Final decision: ACCEPTED after independent main + production gates
+Submitted 22; Accepted 20/100, Failed R001, Pending R016 only. Initial submitted state is superseded by the verification below.
 
 ## Changes
 - `web/api/paper-balances.js`: shared HMAC verifier accepts an explicit scope without changing default `paper:balances:read`.
@@ -19,3 +19,14 @@ Submitted 22; Accepted currently 19/100, Failed R001, Pending R016 and R022.
 
 ## Boundaries
 The publicly browsable v1.0 trading terminal is still volatile BROWSER MEMORY ONLY. Reservations are not order fills, a matching engine or a user-visible durable account. No real trading, funds, on-chain transactions, keys, KYC or deposits. R016 ignored-build step remains Pending.
+
+
+## Final acceptance evidence — 2026-11-21
+- [Merged PR #15](https://github.com/twappleon/Crypto-Trading-Platform/pull/15), [feature main SHA `499bfa77`](https://github.com/twappleon/Crypto-Trading-Platform/commit/499bfa77bf4055195301259c392c797a52731548).
+- [PR Site/PG/local Chromium SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884748582); [PR Core BDD SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884748599).
+- [Main Site + PostgreSQL 16 + local browser CI SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884794213); [main Core BDD SUCCESS](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884794257).
+- [Vercel READY Production dpl_3JWMZNBCEACnEJEBZmiwpn3vF5JN](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/3JWMZNBCEACnEJEBZmiwpn3vF5JN) reports GitHub main `499bfa77bf4055195301259c392c797a52731548`.
+- [Public HTTPS exact HTML hash / safe anonymous balances + holds API / desktop + 390px mobile Chromium E2E — SUCCESS attempt 2](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884794182/attempts/2). [Public screenshot artifact #14699491503](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884794182/artifacts/14699491503).
+- Initial public release attempt failed 404 because the new API had not propagated to the alias. Retried after Production READY; no earlier failing attempt counted. Public `GET /api/paper-holds` returns 503 without PostgreSQL configuration, and POST 405, intentionally. Public site remains browser-local demonstration; no authenticated persistent browser order entry.
+
+**Result:** R022 Accepted; tally 20/100. R016 remains Pending. Next P0 is sandbox-only identity/session and *atomic persisted PAPER orders*, then browser reload/negative E2E. Never enable real funds, on-chain operations, customer KYC or private keys.
