@@ -11,3 +11,13 @@ Date: 2026-11-21. Branch: feat/round-015-visible-paper-api-status-20261121. **SU
 
 ## Safety and next work
 Synthetic browser session orders remain only OPEN/CANCELED, not filled; reload resets all. No deposits, withdrawals, KYC, wallet keys, live quotes or real money. Next: clear release proof, then build authenticated/account-isolated durable PostgreSQL PAPER API with reconciliation/replay and fail-closed E2E.
+
+## Final R015 Accepted evidence — 2026-11-21
+**R015 Accepted once. Submitted 15 / Accepted 14/100 / Failed R001 / Pending 0.** The initial PR Site CI failure was an incorrect VM stub expectation about initial HTML text, corrected by [test commit 2aa4cbb](https://github.com/twappleon/Crypto-Trading-Platform/commit/2aa4cbb72885ff44cca5539db8d98b7c341c0de6); final CI is green. Public site has observable API diagnostic and fail-closed forged READY/503/network handling. This does NOT mean server-side PAPER orders or funds exist.
+
+- R015 source: [PR #7](https://github.com/twappleon/Crypto-Trading-Platform/pull/7); released main SHA [15844ec](https://github.com/twappleon/Crypto-Trading-Platform/commit/15844ec0b42c023a90fce6b2972418d041c836e2).
+- R015 PR [Site CI SUCCESS #44850667770](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44850667770), [Core CI SUCCESS #44850667764](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44850667764); final main [Site CI SUCCESS #44850768080](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44850768080), [Core CI SUCCESS #44850768167](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44850768167).
+- [Vercel Production READY dpl_5kGH5APwhQec7hNPjzneF8zM9min](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/5kGH5APwhQec7hNPjzneF8zM9min): target production, GitHub ref main, commit SHA 15844ec0b42c023a90fce6b2972418d041c836e2, public alias https://crypto-trading-platform-demo.vercel.app/.
+- [Public release E2E SUCCESS #44850768106 attempt 2](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44850768106/attempts/2): anonymous HTTPS 200; byte-for-byte source/public SHA256 27d41cfa7c9a56a92779e545e031a688c0cfca6cf71514b7f23630c4fd84cf86; GET /api/paper-status 200 NOT_READY, POST 405; desktop 1366px and mobile 390px Chromium, negative unavailable API, local buy/sell/cancel/reset/history. [Screenshot artifact #14684204570](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44850768106/artifacts/14684204570).
+- The first public E2E attempt failed while the Vercel alias was still older; rerun after READY succeeded. The feature remains browser-only synthetic data; no authenticated or persistent API, real money, private keys, KYC or on-chain execution.
+
