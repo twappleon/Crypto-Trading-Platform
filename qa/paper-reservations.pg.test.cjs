@@ -50,6 +50,24 @@ async function available(client,owner,asset){
   const afterCancel=await reservePaperHold(first,{id:'r20_order_1',owner:'r20_alice',asset:'USDC',amount:'30.00'});
   assert.equal(afterCancel.state,'RELEASED','replay cannot resurrect canceled hold');
   assert.equal(await available(first,'r20_alice','USDC'),50);
+  // R021: old code would return ACTIVE without waiting for an in-flight
+  // cancellation. Real PostgreSQL account row locking must serialize replays.
+  await reservePaperHold(first,{id:'r21_replay_race',owner:'r20_alice',asset:'USDC',amount:'5.00'});
+  await second.query('BEGIN');
+  try{
+   await second.query('SELECT balance FROM paper_ledger_accounts WHERE account_id=$1 AND asset=$2 FOR UPDATE',
+    ['r20_alice','USDC']);
+   await second.query("UPDATE paper_ledger_holds SET state='RELEASED' WHERE id='r21_replay_race' AND account_id='r20_alice'");
+   const replayPromise=reservePaperHold(first,{id:'r21_replay_race',owner:'r20_alice',asset:'USDC',amount:'5.00'});
+   const duringCancel=await Promise.race([replayPromise.then(()=> 'resolved',()=> 'rejected'),
+    new Promise(resolve=>setTimeout(()=>resolve('blocked'),100))]);
+   assert.equal(duringCancel,'blocked','replay must wait for pending cancellation row lock');
+   await second.query('COMMIT');
+   const raceReplay=await replayPromise;
+   assert.equal(raceReplay.replayed,true);
+   assert.equal(raceReplay.state,'RELEASED','durable post-lock state must win after cancellation');
+   assert.equal(await available(first,'r20_alice','USDC'),50,'no re-reserve after committed cancellation');
+  }catch(error){await second.query('ROLLBACK').catch(()=>{});throw error}
   await reservePaperHold(second,{id:'r20_btc_1',owner:'r20_bob',asset:'BTC',amount:'0.000001'});
   assert.equal(await available(first,'r20_bob','BTC'),1.999999);
   // Simulate database crash/rollback of an uncommitted hold, not a claimed recovery algorithm.
