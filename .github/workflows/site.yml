@@ -18,6 +18,7 @@ jobs:
           node web/site-interaction.test.cjs
           node web/paper-status.test.cjs
           node web/paper-status-ui.test.cjs
+          node web/deployment-gate.test.cjs
       - name: Install Chromium for actual browser E2E
         run: |
           npm install --no-save --no-package-lock playwright@1.64.1

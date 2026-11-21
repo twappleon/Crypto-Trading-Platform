@@ -89,3 +89,10 @@ Run \`node web/paper-status-ui.test.cjs\` plus smoke/interaction/API tests, loca
 - Given two in-flight requests, an earlier successful result cannot overwrite a newer failure.
 - Given API diagnostics, local orders and balances remain untouched; no cookies, stored tokens, or third-party URLs are transmitted.
 - Production acceptance requires public status GET 200 and forbidden POST 405, exact deployed \`main\` SHA, public HTML hash, logged-out Chromium 1366x768 and 390x844 screenshots, green Site/Core CI. Branch-only tests never count as Accepted.
+## Round 016 — Production deployment quota guard / negative BDD
+Run `node web/deployment-gate.test.cjs` and the full website smoke/Chromium suite.
+- Given `main` and a verified Git diff containing only documentation, then ignored-build exit 0 SKIPs duplicate Production work.
+- Given any `web/` file or top-level `vercel.json` changed, then exit 1 BUILDS to keep the deployed site current.
+- Given missing Git history, malformed SHA (including git option injection), unexpected Production branch, or unknown deployment environment, then exit 1 BUILDS rather than silently ignoring a user-visible update.
+- Given an explicit ATLAS_FORCE_BUILD=1, then exit 1 BUILDS even with docs-only changes.
+- This gate does not grant any real-money capability, PostgreSQL connectivity, or authentication. Verify public HTML and browser interactions independently.
