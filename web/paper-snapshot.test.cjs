@@ -45,7 +45,7 @@ async function invoke(handler,{authorization=bearer('alice'),method='GET',url='/
  assert.equal((await invoke(handler,{method:'HEAD'})).body,null);
  for(const method of ['POST','PATCH','PUT','DELETE','OPTIONS'])
   assert.equal((await invoke(handler,{method})).status,405);
- for(const authorization of [undefined,'Bearer nonsense',bearer('treasury'),
+ for(const authorization of [null,'Bearer nonsense',bearer('treasury'),
   bearer('alice','paper:holds:read'),bearer('alice','paper:balances:read'),
   bearer('alice','paper:orders:write'),bearer('alice','paper:snapshot:read',Math.floor(NOW/1000)-1),
   bearer('alice','paper:snapshot:read',Math.floor(NOW/1000)+86400),
