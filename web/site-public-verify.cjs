@@ -14,7 +14,7 @@ const url = process.env.SITE_URL || 'https://crypto-trading-platform-demo.vercel
   console.log('FINAL_URL=' + response.url);
   assert.equal(response.status, 200, 'production must serve HTTP 200 without login');
   const published = await response.text();
-  for (const term of ['PAPER / SANDBOX', 'Synthetic market data', 'Cancel all open demo orders', 'Prototype v0.6', 'no executions']) {
+  for (const term of ['PAPER / SANDBOX', 'Synthetic market data', 'Cancel all open demo orders', 'Prototype v0.7', 'no executions']) {
     assert.ok(published.includes(term), 'public site is missing release marker: ' + term);
   }
   const local = fs.readFileSync(path.join(__dirname, 'index.html'), 'utf8');
