@@ -17,7 +17,7 @@ const vm=require('node:vm');
  const safe={mode:'PAPER_SANDBOX',readiness:'NOT_READY',storage:'BROWSER_MEMORY_ONLY',synthetic:true,
   durablePostgresConnected:false,publicAuthenticatedApi:false,orderEntryEnabled:false,realMoneyEnabled:false,custodyEnabled:false};
  const response=(body,status=200,type='application/json')=>({status,headers:{get:()=>type},json:async()=>body});
- assert.match(label(),/Not checked/);
+ assert.match(html,/Not checked\. This terminal remains browser-only\./,'initial accessible label appears in HTML');
  queue.push(async()=>response(safe));await click();
  assert.match(label(),/API reachable \(NOT_READY\)/);
  assert.equal(requests[0].url,'/api/paper-status');
