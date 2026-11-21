@@ -17,6 +17,7 @@ jobs:
           node web/site-smoke.test.cjs
           node web/site-interaction.test.cjs
           node web/paper-status.test.cjs
+          node web/paper-status-ui.test.cjs
       - name: Install Chromium for actual browser E2E
         run: |
           npm install --no-save --no-package-lock playwright@1.64.1
@@ -27,6 +28,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: paper-site-r011-desktop-mobile
+          name: paper-site-r015-desktop-mobile
           path: artifacts/*.png
           if-no-files-found: ignore
