@@ -73,3 +73,7 @@ The server-only read boundary rejects incomplete BTC/USDC paper accounts or math
 
 ## Round 022 — restricted PostgreSQL PAPER hold inspection (candidate)
 The server-only `/api/paper-holds` GET/HEAD boundary returns **read-only synthetic hold reservations**, scoped to a trusted `paper:holds:read` signed subject. It is **not** an order history, has no public token issuer and offers no order submission. Unconfigured production returns 503; anonymous requests return 401 or 503; POST/PUT/DELETE are 405. Local demo orders remain volatile and unrelated to the PostgreSQL service. [R022 BDD](docs/BDD.md) and [R022 report](docs/ROUND_022_REPORT.md).
+
+
+## Latest verified checkpoint (2026-11-21)
+**21/100 Accepted; Submitted 22; Failed R001; Pending 0.** R022 read-only owner-scoped PAPER holds shipped within [Production SHA 499bfa77](https://github.com/twappleon/Crypto-Trading-Platform/commit/499bfa77bf4055195301259c392c797a52731548) with [public E2E and screenshots](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44884794182/attempts/2). The R016 docs-only ignored-build gate also received [actual Vercel SKIP proof](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/47nMThsWa8kronnsk4EGCNUx12eV). The public browser demo remains v1.0 **local-memory simulation only**; its new read-only server hold endpoint safely returns 503 until a separate disposable PostgreSQL backend and trusted authorization are configured. Nothing accepts real assets, chain transactions, keys or KYC.
