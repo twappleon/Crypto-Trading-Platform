@@ -19,6 +19,7 @@ jobs:
           node web/paper-status.test.cjs
           node web/paper-balances.test.cjs
           node web/paper-balance-invariants.test.cjs
+          node web/paper-reservations.test.cjs
           node web/paper-status-ui.test.cjs
           node web/deployment-gate.test.cjs
       - name: Install Chromium for actual browser E2E
@@ -63,4 +64,6 @@ jobs:
         env:
           PAPER_DATABASE_URL: postgresql://paper:paper@localhost:5432/paper_qa
           PAPER_SESSION_SECRET: ci-only-secret-never-use-in-production-0123456789
-        run: node qa/paper-balances.pg.test.cjs
+        run: |
+          node qa/paper-balances.pg.test.cjs
+          node qa/paper-reservations.pg.test.cjs
