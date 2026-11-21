@@ -67,12 +67,9 @@ function createHandler({env=process.env,now=()=>Date.now(),lookup=lookupPostgres
   if(!owner)return reply(401,{mode:'PAPER_SANDBOX',error:'UNAUTHORIZED'});
   try{
    const rows=await lookup(owner,env);
-   if(!Array.isArray(rows)||rows.some(r=>!['BTC','USDC'].includes(r.asset)
-    ||![r.total,r.locked,r.available].every(x=>typeof x==='string'&&NUM.test(x))))
-    throw Error('invalid balance snapshot');
-   return reply(200,{mode:'PAPER_SANDBOX',storage:'POSTGRES_PAPER_READ_ONLY',synthetic:true,
+   const safeRows=verifyBalanceRows(rows);\n   return reply(200,{mode:'PAPER_SANDBOX',storage:'POSTGRES_PAPER_READ_ONLY',synthetic:true,
     readOnly:true,realMoneyEnabled:false,orderEntryEnabled:false,
-    balances:rows.map(r=>({asset:r.asset,total:r.total,locked:r.locked,available:r.available}))});
+    balances:safeRows});
   }catch(_){return reply(503,{mode:'PAPER_SANDBOX',error:'PAPER_BALANCES_UNAVAILABLE'})}
  };
 }
