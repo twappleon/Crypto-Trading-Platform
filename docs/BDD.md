@@ -131,3 +131,11 @@ Run `node web/paper-reservations.test.cjs` for no-DB negative input cases. In is
 - Given crash simulation via a rolled-back uncommitted hold, a new transaction sees no phantom hold.
 - Given negative, exponential, wrong precision, zero, treasury owner, or invalid IDs, reject **before any database operation**.
 - Do not expose write API, token issuance, persistent website order status, settlement, real funds, on-chain transfers or KYC. Production public site v1.0 must continue to display BROWSER MEMORY ONLY until genuinely connected. Require CI + Production SHA + HTTPS/mobile Chromium + screenshots before Accepted.
+
+## R021 — PostgreSQL PAPER idempotent replay must serialize with cancellation
+Run `node web/paper-reservations.test.cjs`, then `node qa/paper-reservations.pg.test.cjs` with the disposable PostgreSQL 16 service used in Site CI.
+- Given an ACTIVE synthetic USDC hold with a trusted owner and exact replay payload, when the replay's first read sees ACTIVE but cancellation commits before the replay acquires the owner/asset row lock, then replay returns the **post-lock durable RELEASED state**, not stale ACTIVE.
+- Given an in-flight cancellation transaction holds the account row lock, the replay must wait for that lock, re-read the hold and return RELEASED after commit; neither double-lock nor resurrect the released hold.
+- Given a replay has mismatched owner, asset or amount, fail with IDEMPOTENCY_CONFLICT; a prior ID that disappears or has an unknown state must fail closed without new insertion.
+- Invalid precision, treasury owner, unknown IDs and double-cancel retain the existing negative gates. Local deterministic mock and two actual PostgreSQL connections must both run; a fake-only test is not sufficient.
+- Server-only code does **not** authorize public order writes, token issuance, claims of persistent browser balances, custody or real execution. Round 021 is **Pending** until Site/Core GitHub CI, public exact-source Vercel Production, HTTP 200/negative API checks and 1366px + 390px public browser screenshots all succeed.
