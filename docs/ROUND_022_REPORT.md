@@ -30,3 +30,7 @@ The publicly browsable v1.0 trading terminal is still volatile BROWSER MEMORY ON
 - Initial public release attempt failed 404 because the new API had not propagated to the alias. Retried after Production READY; no earlier failing attempt counted. Public `GET /api/paper-holds` returns 503 without PostgreSQL configuration, and POST 405, intentionally. Public site remains browser-local demonstration; no authenticated persistent browser order entry.
 
 **Result:** R022 Accepted; tally 20/100. R016 remains Pending. Next P0 is sandbox-only identity/session and *atomic persisted PAPER orders*, then browser reload/negative E2E. Never enable real funds, on-chain operations, customer KYC or private keys.
+
+
+## Post-acceptance R016 closure note
+Subsequent live Vercel build logs confirmed the previously pending R016 documentation-only build SKIP. **Current cumulative tally is 21/100 Accepted, Submitted 22, Failed R001, Pending 0.** R022's own independent acceptance remains one round, not counted twice. [R016 evidence](ROUND_016_REPORT.md).
