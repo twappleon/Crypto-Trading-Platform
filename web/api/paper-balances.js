@@ -12,7 +12,7 @@ const SQL=`SELECT a.asset, a.balance::text AS total,
  LEFT JOIN paper_ledger_holds h ON h.asset=a.asset AND h.account_id=a.account_id
  WHERE a.account_id=$1 AND a.asset IN ('BTC','USDC')
  GROUP BY a.asset,a.balance ORDER BY a.asset`;
-function authenticate(header,secret,nowSeconds) {
+function authenticate(header,secret,nowSeconds,requiredScope='paper:balances:read') {
  if(typeof header!=='string'||header.length>4096||!header.startsWith('Bearer '))return null;
  const token=header.slice(7);
  const parts=token.split('.');
@@ -30,7 +30,7 @@ function authenticate(header,secret,nowSeconds) {
  }catch(_){return null}
  if(!claims||typeof claims!=='object'||Array.isArray(claims)
     ||!ID.test(claims.sub||'')||claims.sub==='treasury'
-    ||claims.scope!=='paper:balances:read'
+    ||claims.scope!==requiredScope
     ||!Number.isSafeInteger(claims.exp)||claims.exp<=nowSeconds
     ||claims.exp>nowSeconds+3600)return null;
  return claims.sub;
