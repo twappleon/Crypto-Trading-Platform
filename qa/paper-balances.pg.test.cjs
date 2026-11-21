@@ -73,9 +73,22 @@ async function request(handler,owner,method='GET',extra={}){
   const other=await request(handler,'qa_bob');
   assert.equal(Number(other.body.balances.find(r=>r.asset==='USDC').total),250,
    'user A update must not affect user B read');
+  // R019: corrupt real database state must FAIL CLOSED; no negative available is served.
+  await db.query("UPDATE paper_ledger_holds SET amount=150 WHERE id='qa_hold_a'");
+  const overlocked=await request(handler,'qa_alice');
+  assert.equal(overlocked.status,503,'active holds above total MUST reject read');
+  assert.equal(overlocked.body.error,'PAPER_BALANCES_UNAVAILABLE');
+  assert.equal(overlocked.body.balances,undefined);
+  await db.query("UPDATE paper_ledger_holds SET amount=30 WHERE id='qa_hold_a'");
+  assert.equal((await request(handler,'qa_alice')).status,200,'consistent restored state is readable');
+  await db.query("DELETE FROM paper_ledger_accounts WHERE asset='BTC' AND account_id='qa_bob'");
+  const missingAsset=await request(handler,'qa_bob');
+  assert.equal(missingAsset.status,503,'missing BTC asset MUST NOT be presented as complete snapshot');
+  await db.query("INSERT INTO paper_ledger_accounts(asset,account_id,balance) VALUES ('BTC','qa_bob',9)");
+  assert.equal((await request(handler,'qa_bob')).status,200,'restored isolated account is readable');
   // SQL validation preserves the read-only guarantee: no successful mutation through endpoint.
   const persisted=await db.query("SELECT balance::text FROM paper_ledger_accounts WHERE asset='USDC' AND account_id='qa_alice'");
   assert.equal(Number(persisted.rows[0].balance),90);
-  console.log('PASS: R018 REAL PostgreSQL 16 isolated account-scoped, repeatable-read readonly 2-user PAPER snapshot BDD');
+  console.log('PASS: R018/R019 REAL PostgreSQL 16 paper reads, corrupt holds and missing asset reject, isolation and restore BDD');
  }finally{await db.end()}
 })().catch(e=>{console.error(e);process.exitCode=1});

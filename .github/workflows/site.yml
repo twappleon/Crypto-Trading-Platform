@@ -18,6 +18,7 @@ jobs:
           node web/site-interaction.test.cjs
           node web/paper-status.test.cjs
           node web/paper-balances.test.cjs
+          node web/paper-balance-invariants.test.cjs
           node web/paper-status-ui.test.cjs
           node web/deployment-gate.test.cjs
       - name: Install Chromium for actual browser E2E

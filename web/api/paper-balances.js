@@ -4,7 +4,7 @@
 // Tokens can only be minted by a future trusted server (no public token issuer).
 const crypto=require('node:crypto');
 const ID=/^[A-Za-z0-9_:-]{1,96}$/;
-const NUM=/^\d{1,38}(?:\.\d{1,18})?$/;
+const {verifyBalanceRows}=require('../paper-balance-invariants.cjs');
 const SQL=`SELECT a.asset, a.balance::text AS total,
  COALESCE(SUM(h.amount) FILTER (WHERE h.state='ACTIVE'),0)::text AS locked,
  (a.balance-COALESCE(SUM(h.amount) FILTER (WHERE h.state='ACTIVE'),0))::text AS available
@@ -67,12 +67,10 @@ function createHandler({env=process.env,now=()=>Date.now(),lookup=lookupPostgres
   if(!owner)return reply(401,{mode:'PAPER_SANDBOX',error:'UNAUTHORIZED'});
   try{
    const rows=await lookup(owner,env);
-   if(!Array.isArray(rows)||rows.some(r=>!['BTC','USDC'].includes(r.asset)
-    ||![r.total,r.locked,r.available].every(x=>typeof x==='string'&&NUM.test(x))))
-    throw Error('invalid balance snapshot');
+   const safeRows=verifyBalanceRows(rows);
    return reply(200,{mode:'PAPER_SANDBOX',storage:'POSTGRES_PAPER_READ_ONLY',synthetic:true,
     readOnly:true,realMoneyEnabled:false,orderEntryEnabled:false,
-    balances:rows.map(r=>({asset:r.asset,total:r.total,locked:r.locked,available:r.available}))});
+    balances:safeRows});
   }catch(_){return reply(503,{mode:'PAPER_SANDBOX',error:'PAPER_BALANCES_UNAVAILABLE'})}
  };
 }
