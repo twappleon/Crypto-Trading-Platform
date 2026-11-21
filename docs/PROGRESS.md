@@ -97,3 +97,6 @@ Submitted 11, Accepted **7/100**, Failed 1 (R001), Pending R009/R010/R011. PR so
 - The first public E2E attempt failed while the Vercel alias was still older; rerun after READY succeeded. The feature remains browser-only synthetic data; no authenticated or persistent API, real money, private keys, KYC or on-chain execution.
 
 Next: R016 authenticated PostgreSQL durable PAPER account/order API; isolation, idempotency, replay, conservation and browser E2E remain P0. A docs-only later SHA is not the source SHA of this verified release.
+
+## Round 016 submission — Production deploy guard (2026-11-21)
+**Submitted 16 · Accepted still 14/100 · Failed R001 · Pending R016.** Distinct P0 release pipeline source: `web/deployment-gate.cjs`, independent negative BDD and Site CI invocation; intended Vercel ignored build step to conserve quota by excluding verified docs-only commits. Source branch `feat/r016-vercel-production-change-gate-20261121`. NOT counted until GitHub CI green and Vercel setting/Production exact SHA + public HTTPS/browser validation have been independently verified. No PostgreSQL-backed authenticated order API exists yet, and no real trades or private keys are permitted.
