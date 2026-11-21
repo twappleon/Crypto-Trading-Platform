@@ -53,3 +53,7 @@ The R012 website and executable browser BDD live on `feat/round-012-demo-reserve
 
 ## R014 candidate (v0.7) release checklist
 New `web/api/paper-status.js` is read-only/no-store, no persistent funds. Vercel Production must serve `/api/paper-status` GET 200 with NOT_READY and POST 405, `web/index.html` must be v0.7 + BROWSER MEMORY ONLY. Require exact `main` deployment SHA/READY/HTTPS 200, byte-for-byte HTML and desktop/mobile Chromium plus screenshots, green Site+Core CI. Otherwise R014 Pending (12/100 Accepted), no billing or real trades.
+
+
+## R015 public release gate (v0.8, PENDING)
+Distinct code requires Vercel Production READY from exact GitHub \`main\` SHA, logged-out HTTPS 200, HTML byte equality, API GET /api/paper-status 200 and POST 405, Playwright desktop/mobile Check API button with NOT_READY and simulated unavailable endpoint; screenshot artifact, green Site+Core CI. Until verified, R014 and R015 remain Pending. Never represent read-only diagnostics as a durable backend. Do not bypass daily deployment quota or change billing plans automatically.
