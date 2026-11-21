@@ -70,3 +70,7 @@ A reservation idempotency retry must be linearizable with same-account cancellat
 
 ## Round 023 — one owner-scoped snapshot before any persistent UI
 Add authenticated READ ONLY GET /api/paper-snapshot with paper:snapshot:read HMAC scope, one signed owner and a single PostgreSQL repeatable-read transaction for balances plus bounded holds. Fail closed on corrupted state or any mismatch between locked balances and active reservations; no partial arrays, no CORS, no public token issuer. Public UI remains BROWSER MEMORY ONLY until later trusted identity, write authorization, durable orders, and reload/crash recovery tests are complete. Never enable deposits, custody, chains or actual KYC.
+
+
+## Round 024 — explicitly opt-in synthetic server reservation only
+Add \`POST /api/paper-reserve\` as a disabled-by-default Node/Vercel server-to-server boundary which reuses PostgreSQL locked-row idempotent reservation primitives. Enforce the 3-part env gate, short-lived HMAC scope \`paper:reservations:write\`, synthetic-only \`paper_\` subject, strict JSON and exact BigInt amount validation; reject any browser Origin and cookies as auth. Never accept an owner from body/query. It creates synthetic holds only, **not market orders or fills**. No customer auth issuer, no public write access, no external venue and no website persistence until separately accepted. Require negative BDD, disposable PostgreSQL 16 and public Production/Chromium proof.
