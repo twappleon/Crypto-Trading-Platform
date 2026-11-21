@@ -2,7 +2,7 @@ name: Public PAPER Site Release Gate
 on:
   push:
     branches: [main]
-    paths: ['web/**', 'docs/SITE_RELEASE.md', '.github/workflows/public-site.yml']
+    paths: ['web/**', 'qa/paper-balances.public.test.cjs', 'docs/SITE_RELEASE.md', '.github/workflows/public-site.yml']
   workflow_dispatch:
 jobs:
   public-https-browser:
@@ -17,6 +17,10 @@ jobs:
         env:
           SITE_URL: https://crypto-trading-platform-demo.vercel.app/
         run: node web/site-public-verify.cjs
+      - name: Verify public PAPER balance API denies unauthenticated access and POST
+        env:
+          SITE_URL: https://crypto-trading-platform-demo.vercel.app/
+        run: node qa/paper-balances.public.test.cjs
       - name: Install Chromium (Ubuntu 26.04-compatible)
         run: |
           npm install --no-save --no-package-lock playwright@1.64.1
