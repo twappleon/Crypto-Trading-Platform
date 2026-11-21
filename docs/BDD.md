@@ -96,3 +96,13 @@ Run `node web/deployment-gate.test.cjs` and the full website smoke/Chromium suit
 - Given missing Git history, malformed SHA (including git option injection), unexpected Production branch, or unknown deployment environment, then exit 1 BUILDS rather than silently ignoring a user-visible update.
 - Given an explicit ATLAS_FORCE_BUILD=1, then exit 1 BUILDS even with docs-only changes.
 - This gate does not grant any real-money capability, PostgreSQL connectivity, or authentication. Verify public HTML and browser interactions independently.
+
+## Round 017 — explicit browser-only synthetic fill, negative BDD
+Run `node web/site-smoke.test.cjs` and `node web/site-interaction.test.cjs`; Site CI also runs `node web/site-browser.test.cjs` on desktop 1366px and mobile 390px.
+- Given a fresh 100,000.00 synthetic USDC and 2.000000 BTC, when BUY @10 for 1.000000 BTC is reserved then the user selects **Simulate fill**, the session's synthetic total becomes USDC 99,990.00/BTC 3.000000, locked=0 and history SIMULATED_FILLED.
+- Given SELL @10 for 1.000000 BTC, when manually simulated, total becomes USDC 100,010.00/BTC 1.000000, locked=0, history SIMULATED_FILLED.
+- Given a completed synthetic fill, when a stale detached fill button is clicked again, totals and history do NOT change.
+- Given a canceled order, clicking its former synthetic fill button does not credit funds or change CANCELED into SIMULATED_FILLED.
+- Given a session export containing a manually simulated fill, it keeps `mode=PAPER_BROWSER_ONLY`, `storage=volatile_memory`, `executions=0` (no real executions) and `simulatedFills=1` with truthful status. Reset/reload erases it.
+- Never use orders from remote APIs, customer balances, a real execution venue, live pricing, wallets or KYC. The status GET remains NOT_READY, public write attempts 405. No authenticated PostgreSQL persistence has been added by this round.
+- R017 requires exact production source commit/READY, anonymous HTTPS 200 plus HTML hash and desktop/mobile public Chromium screenshot artifacts; otherwise **Pending**.

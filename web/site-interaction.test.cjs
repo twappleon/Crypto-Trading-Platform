@@ -31,9 +31,9 @@ const document = {
     assert.equal(selector, '[data-id]');
     if (cachedMarkup === element('orders').innerHTML) return cachedButtons;
     cachedMarkup = element('orders').innerHTML;
-    cachedButtons = [...cachedMarkup.matchAll(/data-id="(\d+)"/g)]
+    cachedButtons = [...cachedMarkup.matchAll(/data-id="(\d+)"(?: data-action="(fill)")?/g)]
       .map(m => {
-        const x = { dataset: { id: m[1] }, listeners: {}, addEventListener(kind, fn) {
+        const x = { dataset: { id: m[1], action: m[2] || 'cancel' }, listeners: {}, addEventListener(kind, fn) {
           (this.listeners[kind] ||= []).push(fn);
         }, click() { for (const fn of this.listeners.click || []) fn(); } };
         return x;
@@ -178,6 +178,48 @@ set('amount', '2.000001');
 assert.match(text('riskPreview'), /Insufficient demo balance/, 'overselling BTC must be previewed honestly');
 set('amount', '1e-6');
 assert.match(text('riskPreview'), /Enter a valid positive/, 'exponent input must fail preview validation');
+// Round 017: explicit local-only synthetic full fill, never a market execution.
+click('reset'); click('buyTab'); set('price', '10'); set('amount', '1'); click('submit');
+assert.equal(text('usdcLocked'), 'Locked: 10.00');
+const buyFill = document.querySelectorAll('[data-id]')[1];
+assert.equal(buyFill.dataset.action, 'fill');
+buyFill.click();
+assert.equal(text('count'), '0 open');
+assert.equal(text('usdc'), '99,990.00');
+assert.equal(text('btc'), '3.000000');
+assert.equal(text('usdcLocked'), 'Locked: 0.00');
+assert.match(markup('history'), /SIMULATED_FILLED/);
+assert.match(text('message'), /No market matching/);
+buyFill.click(); // stale/double-settle MUST NOT credit twice
+assert.equal(text('usdc'), '99,990.00');
+assert.equal(text('btc'), '3.000000');
+click('exportHistory');
+const fillSnapshot=JSON.parse(decodeURIComponent(downloads.at(-1).href.split(',')[1]));
+assert.equal(fillSnapshot.executions,0,'never count real exchange executions');
+assert.equal(fillSnapshot.simulatedFills,1);
+assert.equal(fillSnapshot.records[0].status,'SIMULATED_FILLED');
+click('reset');
+assert.equal(text('usdc'), '100,000.00');
+assert.equal(text('btc'), '2.000000');
+click('sellTab');set('price','10');set('amount','1');click('submit');
+const sellActions=document.querySelectorAll('[data-id]');
+sellActions[1].click();
+assert.equal(text('usdc'),'100,010.00');
+assert.equal(text('btc'),'1.000000');
+assert.equal(text('btcLocked'),'Locked: 0.000000');
+sellActions[1].click(); // no duplicate synthetic USDC credit
+assert.equal(text('usdc'),'100,010.00');
+click('reset');
+click('buyTab');set('price','10');set('amount','1');click('submit');
+const activeActions=document.querySelectorAll('[data-id]');
+activeActions[0].click(); // canceled order cannot be simulated as filled
+activeActions[1].click();
+assert.equal(text('usdc'),'100,000.00');
+assert.equal(text('btc'),'2.000000');
+assert.match(markup('history'),/CANCELED/);
+assert.doesNotMatch(markup('history'),/SIMULATED_FILLED/);
+click('reset');
+console.log('PASS: R017 local BUY/SELL synthetic fill balances, stale/double fill fencing, canceled-order refusal, export and reset');
 console.log('PASS: 013 offline volatile JSON export, no empty export, exact scaled units and cleared reset');
 console.log('PASS: 012 exact pre-submit BUY/SELL hold previews, overbooking warning, invalid-input and cancel refresh');
 console.log('PASS: 011 integer-cent ceil, sub-cent reservation, overflow prevention and input precision');
