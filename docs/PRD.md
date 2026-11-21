@@ -67,3 +67,6 @@ A reservation idempotency retry must be linearizable with same-account cancellat
 - Account-id SQL parameter, PostgreSQL read-only Repeatable Read transaction, max 100 exact-decimal ACTIVE/RELEASED synthetic holds, invalid/oversized snapshots fail closed HTTP 503.
 - Anonymous public reads 401/503, all writes 405, cache disabled, CORS absent, no secret reflection. Test real PostgreSQL 16 as well as public HTTPS.
 - Holds are reservation snapshots, **not** matched orders or trade settlement. Main page remains browser-only until trusted paper identity, atomic durable order/ledger, refresh replay and negative browser E2E are proven.
+
+## Round 023 — one owner-scoped snapshot before any persistent UI
+Add authenticated READ ONLY GET /api/paper-snapshot with paper:snapshot:read HMAC scope, one signed owner and a single PostgreSQL repeatable-read transaction for balances plus bounded holds. Fail closed on corrupted state or any mismatch between locked balances and active reservations; no partial arrays, no CORS, no public token issuer. Public UI remains BROWSER MEMORY ONLY until later trusted identity, write authorization, durable orders, and reload/crash recovery tests are complete. Never enable deposits, custody, chains or actual KYC.
