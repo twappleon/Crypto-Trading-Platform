@@ -33,6 +33,10 @@ jobs:
         env:
           SITE_URL: https://crypto-trading-platform-demo.vercel.app/
         run: node qa/paper-reserve.public.test.cjs
+      - name: Verify public PAPER reservation release refuses anonymous writes
+        env:
+          SITE_URL: https://crypto-trading-platform-demo.vercel.app/
+        run: node qa/paper-release.public.test.cjs
       - name: Install Chromium (Ubuntu 26.04-compatible)
         run: |
           npm install --no-save --no-package-lock playwright@1.64.1

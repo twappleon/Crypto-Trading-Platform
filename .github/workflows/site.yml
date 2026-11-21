@@ -23,6 +23,7 @@ jobs:
           node web/paper-balance-invariants.test.cjs
           node web/paper-reservations.test.cjs
           node web/paper-reserve.test.cjs
+          node web/paper-release.test.cjs
           node web/paper-status-ui.test.cjs
           node web/deployment-gate.test.cjs
       - name: Install Chromium for actual browser E2E
@@ -73,3 +74,4 @@ jobs:
           node qa/paper-holds.pg.test.cjs
           node qa/paper-snapshot.pg.test.cjs
           node qa/paper-reserve.pg.test.cjs
+          node qa/paper-release.pg.test.cjs

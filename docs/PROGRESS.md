@@ -1,5 +1,8 @@
 # Crypto Trading Platform — 100-round verified progress
 
+## Round 025 submitted — acceptance pending public CI/Production proof (2026-11-21)
+**Submitted 25 · Accepted remains 23/100 · Failed R001 · Pending R025.** Source branch: `feat/round-025-paper-release-20261121`. New server-only signed synthetic PAPER release endpoint, local negative auth/owner/strict-body BDD, real PostgreSQL 16 double-cancel/replay BDD, public HTTPS safe-denial gate and workflow wiring. **This entry is not an Accepted claim.** Promote to 24/100 only after code merge, main Site+PG16/Core CI SUCCESS, Vercel Production exact feature SHA READY, public API denial + desktop/mobile Chromium E2E screenshot evidence. Current public UI continues to use volatile browser memory.
+
 ## Latest accepted / public release — 2026-11-21
 **Submitted 24 · Accepted 23/100 · Failed R001 · Pending 0.** Current Vercel Production [main feature SHA 6a3b488d](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/3dzWoXSydWa246UNnmtWL3kgrMW3) has passed [public HTTPS/API/desktop+mobile Chromium E2E attempt 2](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894499351/attempts/2) with [screenshots](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44894499351/artifacts/14703248148). R023 was also released/verified at its exact SHA. Earlier sections below are chronological checkpoints, superseded by this verified total. Public UI remains browser-memory only; R024 private PAPER reserve API is default disabled.
 
