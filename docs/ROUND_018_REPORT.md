@@ -20,3 +20,9 @@ Date: 2026-11-21. **Submitted / Pending**. No claims of public persistent tradin
 - [ ] Complete tracked evidence in docs/PROGRESS.md.
 
 **Do not count R018 Accepted until all gates pass**. No real money, token purchase, deposits, custody, KYC, private keys or blockchain actions.
+
+## Source and deployment evidence — follow-up
+- [PR #10](https://github.com/twappleon/Crypto-Trading-Platform/pull/10) merged at [ac51e4d](https://github.com/twappleon/Crypto-Trading-Platform/commit/ac51e4d056e5add54210269e791fb2442ec18d21). Feature PR [Site/Chromium #44866218944](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44866218944) SUCCESS and [Core BDD #44866218945](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44866218945) SUCCESS; [desktop/mobile screenshots artifact #14691916478](https://github.com/twappleon/Crypto-Trading-Platform/actions/runs/44866218944/artifacts/14691916478).
+- Vercel exact-main deployment [dpl_EErGWPjVcetvhKJCgjD88q5TZGrD](https://vercel.com/twappleons-projects/crypto-trading-platform-demo/EErGWPjVcetvhKJCgjD88q5TZGrD) reported **READY**, `main` SHA ac51e4d, alias `crypto-trading-platform-demo.vercel.app`. This establishes deployment provenance, **not** yet successful external HTTPS/browser behavior for this precise release.
+- [PR #11](https://github.com/twappleon/Crypto-Trading-Platform/pull/11) adds a **real disposable PostgreSQL 16** integration job (not a mock) verifying two synthetic accounts, released vs active holds, query-parameter isolation and post-commit refresh, plus public unauthenticated GET/POST negative HTTP BDD in the public-site CI. Pending verification at this entry.
+- Endpoint is intentionally unconfigured (503) until isolated PostgreSQL read-only credentials, valid signed-token issuer/revocation and least privilege are provided. Do not claim public persistent paper trading or increase Accepted until all CI and public browser gates pass.

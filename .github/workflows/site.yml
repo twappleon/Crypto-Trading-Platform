@@ -33,3 +33,33 @@ jobs:
           name: paper-site-r015-desktop-mobile
           path: artifacts/*.png
           if-no-files-found: ignore
+
+  paper-pg-read-bdd:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: paper
+          POSTGRES_PASSWORD: paper
+          POSTGRES_DB: paper_qa
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U paper -d paper_qa"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install PostgreSQL driver in isolated site workspace
+        working-directory: web
+        run: npm install --no-audit --no-fund --ignore-scripts --package-lock=false
+      - name: Verify two-account real PostgreSQL PAPER read isolation and failure modes
+        env:
+          PAPER_DATABASE_URL: postgresql://paper:paper@localhost:5432/paper_qa
+          PAPER_SESSION_SECRET: ci-only-secret-never-use-in-production-0123456789
+        run: node qa/paper-balances.pg.test.cjs
