@@ -80,3 +80,12 @@ Run `node web/paper-status.test.cjs`, `node web/site-smoke.test.cjs`, `node web/
 - HEAD body empty; POST, PUT, PATCH, DELETE and OPTIONS with hostile order/funds/keys bodies all 405 without mutation or cross-origin permission.
 - Website explicitly shows BROWSER MEMORY ONLY and same-origin JSON status link. It continues performing all order operations in volatile JS, without sending funds to the API.
 - Real desktop 1366px + mobile 390px browser must verify GET/POST safety, session trade/cancel/reset/JSON export, no outside traffic, no overflow, screenshotted public HTTPS. Production must be READY at exact main SHA and HTML hash; otherwise R014 Pending.
+
+
+## R015 — visible API diagnostic BDD (P0, pending)
+Run \`node web/paper-status-ui.test.cjs\` plus smoke/interaction/API tests, local desktop/mobile Chromium and, after Vercel READY, the public release gate.
+- Given the public NOT_READY read-only GET contract, clicking Check paper API connection displays a truthful NOT_READY result without authenticating or persisting an order.
+- Given unexpected READY, changed capability flags, injected markup, HTML instead of JSON, HTTP 503 or network failure, the terminal refuses to infer server-backed storage or expose remote order submission.
+- Given two in-flight requests, an earlier successful result cannot overwrite a newer failure.
+- Given API diagnostics, local orders and balances remain untouched; no cookies, stored tokens, or third-party URLs are transmitted.
+- Production acceptance requires public status GET 200 and forbidden POST 405, exact deployed \`main\` SHA, public HTML hash, logged-out Chromium 1366x768 and 390x844 screenshots, green Site/Core CI. Branch-only tests never count as Accepted.

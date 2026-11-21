@@ -48,7 +48,16 @@ const { chromium } = require('playwright');
       const forbiddenPost = await page.request.post(apiUrl, { data: { amount: '100', privateKey: 'should-not-be-accepted' } });
       assert.equal(forbiddenPost.status(), 405, 'never accept unauthenticated paper order data');
       assert.ok((await page.locator('body').innerText()).includes('Synthetic market data'));
-      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.7'));
+      assert.ok((await page.locator('body').innerText()).includes('Prototype v0.8'));
+      // R015: same-origin status button must be truthful, and fail closed when API is down.
+      await page.locator('#checkApi').click();
+      await page.waitForFunction(() => document.getElementById('apiCheckResult').textContent.includes('API reachable (NOT_READY)'));
+      assert.match(await page.locator('#apiCheckResult').textContent(), /browser-memory-only/);
+      await page.route('**/api/paper-status', route => route.fulfill({status:503,contentType:'application/json',body:'{"readiness":"READY","orderEntryEnabled":true}'}));
+      await page.locator('#checkApi').click();
+      await page.waitForFunction(() => document.getElementById('apiCheckResult').textContent.includes('unavailable or invalid'));
+      assert.equal(await page.locator('#usdc').textContent(),'100,000.00','API failure must never mutate demo balance');
+      await page.unroute('**/api/paper-status');
       await page.locator('#price').fill('64275');
       await page.locator('#amount').fill('1');
       assert.match(await page.locator('#riskPreview').textContent(), /Hold: 64,275\.00 USDC/);
