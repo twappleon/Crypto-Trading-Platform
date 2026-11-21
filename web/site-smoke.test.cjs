@@ -1,7 +1,9 @@
 const fs=require('node:fs');const assert=require('node:assert/strict');
 const s=fs.readFileSync(__dirname+'/index.html','utf8');
 for(const x of ['PAPER / SANDBOX','Local browser simulation','Place Demo Order','Open Demo Orders','Session Order History','no executions','Insufficient available demo balance.','Demo order canceled','Reset demo balances & orders','Simulation Notice','aria-live="polite"','@media(max-width:520px)'])assert.ok(s.includes(x),'missing: '+x);
-assert.ok(!/fetch\(|XMLHttpRequest|WebSocket\(|localStorage|sessionStorage/.test(s),'site must not transmit or persist simulated money');
+assert.ok(!/XMLHttpRequest|WebSocket\(|localStorage|sessionStorage/.test(s),'site must never store demo funds or open a trading socket');
+assert.equal((s.match(/\bfetch\(/g)||[]).length,1,'allow one read-only same-origin diagnostic request');
+assert.ok(s.includes("fetch('/api/paper-status',{method:'GET',credentials:'omit',cache:'no-store',redirect:'error'})"),'GET diagnostic may not leak credentials or post orders');
 assert.ok(s.includes("orders=orders.filter"),'cancel must exist');
 assert.ok(s.includes("record.status='CANCELED'"),'cancel must persist visible session status');
 assert.ok(s.includes("history.push({id,side,price,qty,priceCents:Number(priceCents),qtyMicro:Number(qtyMicro),status:'OPEN'})"),'order history records must be created');
@@ -12,7 +14,7 @@ assert.ok(s.includes('id="riskPreview"'), 'local-only reserve preview exists');
 assert.ok(s.includes('fmtUnits(reserve,2)'), 'synthetic quote preview is exact integer cents');
 assert.ok(s.includes('Insufficient demo balance:'), 'pre-submit insufficiency warning must exist');
 assert.ok(s.includes('BigInt('), 'exact scaled math must back demo risk checks');
-assert.ok(s.includes('Prototype v0.7'), 'visible site v0.5 release marker');
+assert.ok(s.includes('Prototype v0.8'), 'visible site v0.5 release marker');
 assert.ok(s.includes('id="cancelAll"'), 'must expose Cancel All action');
 assert.ok(s.includes("record.status='CANCELED'"), 'bulk cancellation must retain accurate status');
 assert.ok(!/history=\[\];seq=0/.test(s), 'reset must not recycle order IDs while stale buttons exist');
@@ -22,5 +24,8 @@ assert.ok(s.includes("storage:'volatile_memory'")&&s.includes("executions:0"),'e
 assert.ok(s.includes("'data:application/json;charset=utf-8,'+encodeURIComponent"),'session JSON must be safely URL encoded');
 assert.ok(s.includes('id="persistenceBadge"')&&s.includes('BROWSER MEMORY ONLY')&&s.includes('href="/api/paper-status"'),'R014 explicitly separates local state from read-only API');
 assert.ok(s.includes('NOT connected to the PostgreSQL paper ledger'),'R014 cannot falsely advertise durable funds');
+assert.ok(s.includes('id="checkApi"')&&s.includes('id="apiCheckResult"'),'visible R015 API controls must exist');
+assert.ok(s.includes('requestId!==apiCheckSequence')&&s.includes('state.orderEntryEnabled===false'),'stale response and fail-closed guards required');
+console.log('PASS: R015 visible read-only same-origin readiness and stale response checks');
 console.log('PASS: R014 local-only page discloses read-only API and nonpersistent state');
 console.log('PASS: R013 local paper history JSON export, static safety, responsive layout and order controls');
