@@ -60,3 +60,10 @@ Prior to enabling any public order API, isolated account-scoped PAPER holds MUST
 
 ## R021 — replay/cancel linearizability for disposable PAPER holds
 A reservation idempotency retry must be linearizable with same-account cancellation. Both paths must serialize through the owner/asset `paper_ledger_accounts FOR UPDATE` row lock before deciding the externally observable hold state. A stale pre-lock ACTIVE snapshot cannot be returned after RELEASED commits; the same ID cannot be recreated or silently accepted with a different payload. Verify deterministic stale-read interleaving and two-connection PostgreSQL 16 lock contention in CI. This remains an **internal server-only primitive** with no public order write endpoint, user identity issuer, actual matching, persistent website UI, real assets or KYC.
+
+
+## R022 — isolated durable PAPER hold inspection boundary (2026-11-21)
+- Server-only GET/HEAD `/api/paper-holds` requires HMAC scope `paper:holds:read` (separate from `paper:balances:read`). No token issuer or public write API.
+- Account-id SQL parameter, PostgreSQL read-only Repeatable Read transaction, max 100 exact-decimal ACTIVE/RELEASED synthetic holds, invalid/oversized snapshots fail closed HTTP 503.
+- Anonymous public reads 401/503, all writes 405, cache disabled, CORS absent, no secret reflection. Test real PostgreSQL 16 as well as public HTTPS.
+- Holds are reservation snapshots, **not** matched orders or trade settlement. Main page remains browser-only until trusted paper identity, atomic durable order/ledger, refresh replay and negative browser E2E are proven.

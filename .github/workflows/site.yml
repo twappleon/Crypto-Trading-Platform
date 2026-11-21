@@ -18,6 +18,7 @@ jobs:
           node web/site-interaction.test.cjs
           node web/paper-status.test.cjs
           node web/paper-balances.test.cjs
+          node web/paper-holds.test.cjs
           node web/paper-balance-invariants.test.cjs
           node web/paper-reservations.test.cjs
           node web/paper-status-ui.test.cjs
@@ -67,3 +68,4 @@ jobs:
         run: |
           node qa/paper-balances.pg.test.cjs
           node qa/paper-reservations.pg.test.cjs
+          node qa/paper-holds.pg.test.cjs

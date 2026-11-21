@@ -139,3 +139,15 @@ Run `node web/paper-reservations.test.cjs`, then `node qa/paper-reservations.pg.
 - Given a replay has mismatched owner, asset or amount, fail with IDEMPOTENCY_CONFLICT; a prior ID that disappears or has an unknown state must fail closed without new insertion.
 - Invalid precision, treasury owner, unknown IDs and double-cancel retain the existing negative gates. Local deterministic mock and two actual PostgreSQL connections must both run; a fake-only test is not sufficient.
 - Server-only code does **not** authorize public order writes, token issuance, claims of persistent browser balances, custody or real execution. Round 021 is **Pending** until Site/Core GitHub CI, public exact-source Vercel Production, HTTP 200/negative API checks and 1366px + 390px public browser screenshots all succeed.
+
+
+## Round 022 — signed PAPER reservation snapshot (read-only, separate from browser demo)
+Run `node web/paper-holds.test.cjs` plus actual PostgreSQL 16 `node qa/paper-holds.pg.test.cjs` after balance/reservation PG fixtures; deployed source uses `node qa/paper-holds.public.test.cjs` and public Chromium workflow.
+- Given a verified HMAC scoped exactly `paper:holds:read`, GET /api/paper-holds reads only signed owner using a prepared account parameter `$1`, showing synthetic ACTIVE/RELEASED reservations (not trades).
+- Given forged/expired/treasury/balance-only token, reject 401 before accessing PostgreSQL; query/body account overrides ignored.
+- Given POST/PUT/PATCH/DELETE/OPTIONS, return 405 without modifying funds. HEAD has no body. Public anonymous access must yield 401/503 without leaking holdings.
+- Given missing production DB config, fail closed 503. Any PostgreSQL exception or leaked secret must not reach client JSON.
+- Given invalid precision, a negative amount, unknown asset/state, duplicate IDs or over 100 records, refuse 503 rather than show a partial or corrupt list; verify a restored read succeeds.
+- Given an actual PostgreSQL state transition, a subsequent read transaction observes committed status; another owner never sees the record.
+- The live terminal stays volatile BROWSER MEMORY ONLY; no public token issuer, durable browser orders, real execution, funding, keys or KYC.
+- Acceptance requires green PR/main Site+PG and Core CI, Vercel Production READY exact feature SHA, public HTTP/Chromium/screenshots, and public negative API verification; otherwise Pending.
