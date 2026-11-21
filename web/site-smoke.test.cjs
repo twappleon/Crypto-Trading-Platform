@@ -14,7 +14,7 @@ assert.ok(s.includes('id="riskPreview"'), 'local-only reserve preview exists');
 assert.ok(s.includes('fmtUnits(reserve,2)'), 'synthetic quote preview is exact integer cents');
 assert.ok(s.includes('Insufficient demo balance:'), 'pre-submit insufficiency warning must exist');
 assert.ok(s.includes('BigInt('), 'exact scaled math must back demo risk checks');
-assert.ok(s.includes('Prototype v0.9'), 'visible site v0.5 release marker');
+assert.ok(s.includes('Prototype v1.0'), 'visible site v0.5 release marker');
 assert.ok(s.includes('id="cancelAll"'), 'must expose Cancel All action');
 assert.ok(s.includes("record.status='CANCELED'"), 'bulk cancellation must retain accurate status');
 assert.ok(!/history=\[\];seq=0/.test(s), 'reset must not recycle order IDs while stale buttons exist');
