@@ -22,5 +22,29 @@ const denyClient={query(){calls++;throw Error('untrusted request touched databas
  }
  await assert.rejects(()=>cancelPaperHold(denyClient,{id:'a',owner:'treasury'}));
  assert.equal(calls,0,'invalid identity or amounts must be rejected before opening transaction');
+ // R021 deterministic negative BDD: an earlier read observes ACTIVE while
+ // a cancellation commits before the account row lock is acquired. Never reply ACTIVE.
+ let replayReads=0,accountLocks=0,insertions=0;
+ const replayClient={async query(sql){
+  if(sql==='BEGIN'||sql==='COMMIT'||sql==='ROLLBACK')return {rowCount:0,rows:[]};
+  if(sql.startsWith('SELECT id,account_id,asset,amount::text AS amount,state')){
+   replayReads++;
+   return {rowCount:1,rows:[{id:'r21_id',account_id:'alice',asset:'USDC',amount:'5.00',
+    state:replayReads===1?'ACTIVE':'RELEASED'}]};
+  }
+  if(sql.startsWith('SELECT balance::text AS total FROM paper_ledger_accounts')){
+   accountLocks++;
+   return {rowCount:1,rows:[{total:'100.00'}]};
+  }
+  if(sql.startsWith('INSERT'))insertions++;
+  throw Error('unexpected query '+sql);
+ }};
+ const settled=await reservePaperHold(replayClient,{id:'r21_id',owner:'alice',asset:'USDC',amount:'5'});
+ assert.deepEqual({state:settled.state,replayed:settled.replayed},
+  {state:'RELEASED',replayed:true},'replay after concurrent cancel must not report stale ACTIVE');
+ assert.equal(replayReads,2,'replay must recheck durable state after account lock');
+ assert.equal(accountLocks,1,'replay must acquire the same row lock as cancellation');
+ assert.equal(insertions,0,'replay must never reinsert an existing hold');
+ console.log('PASS R021: post-lock replay reflects concurrent cancel, no stale or duplicate reserve');
  console.log('PASS R020: PAPER reserve/cancel strict precision, owner, negative input and no DB access');
 })().catch(e=>{console.error(e);process.exitCode=1});
