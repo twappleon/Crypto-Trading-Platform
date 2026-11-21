@@ -1,6 +1,6 @@
 const fs=require('node:fs');const assert=require('node:assert/strict');
 const s=fs.readFileSync(__dirname+'/index.html','utf8');
-for(const x of ['PAPER / SANDBOX','Local browser simulation','Place Demo Order','Open Demo Orders','Session Order History','no executions','Insufficient available demo balance.','Demo order canceled','Reset demo balances & orders','Simulation Notice','aria-live="polite"','@media(max-width:520px)'])assert.ok(s.includes(x),'missing: '+x);
+for(const x of ['PAPER / SANDBOX','Local browser simulation','Place Demo Order','Open Demo Orders','Session Order History','no real executions','Insufficient available demo balance.','Demo order canceled','Reset demo balances & orders','Simulation Notice','aria-live="polite"','@media(max-width:520px)'])assert.ok(s.includes(x),'missing: '+x);
 assert.ok(!/XMLHttpRequest|WebSocket\(|localStorage|sessionStorage/.test(s),'site must never store demo funds or open a trading socket');
 assert.equal((s.match(/\bfetch\(/g)||[]).length,1,'allow one read-only same-origin diagnostic request');
 assert.ok(s.includes("fetch('/api/paper-status',{method:'GET',credentials:'omit',cache:'no-store',redirect:'error'})"),'GET diagnostic may not leak credentials or post orders');
@@ -14,7 +14,7 @@ assert.ok(s.includes('id="riskPreview"'), 'local-only reserve preview exists');
 assert.ok(s.includes('fmtUnits(reserve,2)'), 'synthetic quote preview is exact integer cents');
 assert.ok(s.includes('Insufficient demo balance:'), 'pre-submit insufficiency warning must exist');
 assert.ok(s.includes('BigInt('), 'exact scaled math must back demo risk checks');
-assert.ok(s.includes('Prototype v0.8'), 'visible site v0.5 release marker');
+assert.ok(s.includes('Prototype v0.9'), 'visible site v0.5 release marker');
 assert.ok(s.includes('id="cancelAll"'), 'must expose Cancel All action');
 assert.ok(s.includes("record.status='CANCELED'"), 'bulk cancellation must retain accurate status');
 assert.ok(!/history=\[\];seq=0/.test(s), 'reset must not recycle order IDs while stale buttons exist');
@@ -26,6 +26,11 @@ assert.ok(s.includes('id="persistenceBadge"')&&s.includes('BROWSER MEMORY ONLY')
 assert.ok(s.includes('NOT connected to the PostgreSQL paper ledger'),'R014 cannot falsely advertise durable funds');
 assert.ok(s.includes('id="checkApi"')&&s.includes('id="apiCheckResult"'),'visible R015 API controls must exist');
 assert.ok(s.includes('requestId!==apiCheckSequence')&&s.includes('state.orderEntryEnabled===false'),'stale response and fail-closed guards required');
+assert.ok(s.includes('data-action="fill"')&&s.includes("record.status='SIMULATED_FILLED'"),'R017 synthetic manual fill and terminal history must exist');
+assert.ok(s.includes('simulatedFills:history.filter')&&s.includes('executions:0'), 'real executions remain zero despite synthetic fills');
+assert.ok(s.includes('No market matching, external execution, or PostgreSQL settlement'), 'R017 fill must disclose no real market execution or persistence');
+assert.ok(!s.includes('localStorage')&&!s.includes('sessionStorage'),'R017 must remain volatile');
+console.log('PASS: R017 explicit local paper fill UI/history, real execution safety and volatile storage');
 console.log('PASS: R015 visible read-only same-origin readiness and stale response checks');
 console.log('PASS: R014 local-only page discloses read-only API and nonpersistent state');
 console.log('PASS: R013 local paper history JSON export, static safety, responsive layout and order controls');
