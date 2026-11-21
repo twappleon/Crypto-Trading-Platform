@@ -1,0 +1,8 @@
+{
+  "name": "atlas-paper-exchange-demo",
+  "private": true,
+  "version": "0.18.0",
+  "description": "Paper-only Vercel site; read-only authenticated Postgres boundary is disabled without server configuration",
+  "engines": {"node": ">=20"},
+  "dependencies": {"pg": "8.16.3"}
+}
